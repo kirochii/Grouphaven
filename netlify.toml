@@ -1,0 +1,6 @@
+[functions]
+  directory = "netlify/functions"  # The folder where your serverless functions are stored
+
+[[cron]]
+schedule = "* * * * *"  # Runs the function every minute
+function = "printHello"         # Name of your function (dfs.js)
