@@ -6,18 +6,19 @@ export default function HomeScreen() {
   return (
     <PaperProvider>
       <ImageBackground
-        source={require('../../assets/images/background.png')}
+        source={require('../assets/images/background.png')}
         resizeMode="cover"
         style={styles.background}
       >
         <View style={styles.container}>
           <View style={styles.iconContainer}>
             <Image
-              source={require('../../assets/images/iconWhite.png')}  // Replace with your image path
+              source={require('../assets/images/iconWhite.png')}  // Replace with your image path
               style={styles.icon}
             />
             <Text style={styles.iconText}>GROUPHAVEN</Text>
           </View>
+          <Text style={styles.text}>Match. Connect. Thrive.</Text>
         </View>
       </ImageBackground>
     </PaperProvider>
