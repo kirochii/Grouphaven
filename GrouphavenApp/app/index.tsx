@@ -3,7 +3,7 @@ import { Provider as PaperProvider, Text, Button } from 'react-native-paper';
 import React from 'react';
 import { router } from 'expo-router';
 
-export default function LandingScreen() {
+export default function index() {
   return (
     <PaperProvider>
       <ImageBackground
@@ -91,6 +91,6 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter-Bold',
     fontSize: 20,
     color: '#32353b',
-    paddingVertical: '2%',
+    paddingVertical: '1%',
   },
 });
