@@ -1,6 +1,7 @@
 import { StyleSheet, ImageBackground, View, Image } from 'react-native';
 import { Provider as PaperProvider, Text, Button } from 'react-native-paper';
 import React from 'react';
+import { router } from 'expo-router';
 
 export default function LandingScreen() {
   return (
@@ -23,37 +24,16 @@ export default function LandingScreen() {
           </View>
 
           <View style={styles.buttonContainer}>
-            <Button style={styles.button} labelStyle={styles.buttonText} icon={() => (
-              <Image
-                source={require('../assets/images/logo_Facebook.png')}
-                style={styles.iconImage}
-              />
-            )} mode="elevated" rippleColor="rgba(0, 0, 0, 0.2)" onPress={() => console.log('Pressed')}>
-              Continue with Facebook
+            <Button style={styles.button} labelStyle={styles.buttonText} mode="contained" onPress={() => router.navigate("/SignUp")} rippleColor="rgba(0, 0, 0, 0.2)">
+              SIGN UP
             </Button>
-            <Button style={styles.button} labelStyle={styles.buttonText} icon={() => (
-              <Image
-                source={require('../assets/images/logo_Google.png')}
-                style={styles.iconImage}
-              />
-            )} mode="elevated" rippleColor="rgba(0, 0, 0, 0.2)" onPress={() => console.log('Pressed')}>
-              Continue with Google
-            </Button>
-            <Button style={styles.button} labelStyle={styles.buttonText} icon={() => (
-              <Image
-                source={require('../assets/images/logo_X.png')}
-                style={styles.iconImage}
-              />
-            )} mode="elevated" rippleColor="rgba(0, 0, 0, 0.2)" onPress={() => console.log('Pressed')}>
-              Continue with X
+            <Button style={styles.button} labelStyle={styles.buttonText}
+              mode="contained"
+              onPress={() => console.log('Pressed')} rippleColor="rgba(0, 0, 0, 0.2)"
+            >
+              SIGN IN
             </Button>
           </View>
-
-          <Text style={styles.termText}>
-            By continuing, you agree to our{' '}
-            <Text style={styles.link}>Terms of Service</Text> and acknowledge that you have read our{' '}
-            <Text style={styles.link}>Privacy Policy</Text>.
-          </Text>
         </View>
       </ImageBackground>
     </PaperProvider>
@@ -71,9 +51,9 @@ const styles = StyleSheet.create({
     padding: '5%',
   },
   headerContainer: {
-    flex: 7,
+    flex: 2,
     alignItems: 'center',
-    paddingTop: '15%',
+    paddingTop: '30%',
   },
   text: {
     fontFamily: 'Inter-Light',
@@ -96,39 +76,21 @@ const styles = StyleSheet.create({
     fontSize: 32,
     color: 'white',
   },
-  link: {
-    fontFamily: 'Inter-SemiBold',
-    textDecorationLine: 'underline',
-    color: 'white',
-  },
-  termText: {
-    flex: 1,
-    fontFamily: 'Inter-Light',
-    fontSize: 14,
-    color: 'white',
-    textAlign: 'center',
-    width: '90%',
-    paddingTop: '15%',
-  },
   buttonContainer: {
-    flex: 3,
-    justifyContent: 'space-between',
+    flex: 1,
     width: '100%',
     alignItems: 'center',
+    gap: '10%',
   },
   button: {
     backgroundColor: 'white',
-    borderRadius: 15,
+    borderRadius: 25,
     width: '90%',
   },
   buttonText: {
     fontFamily: 'Inter-Bold',
-    fontSize: 16,
-    color: 'black',
-  },
-  iconImage: {
-    width: 20,
-    height: 20,
-    resizeMode: 'contain',
+    fontSize: 20,
+    color: '#32353b',
+    paddingVertical: '2%',
   },
 });
