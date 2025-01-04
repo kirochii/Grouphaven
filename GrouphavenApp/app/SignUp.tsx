@@ -2,6 +2,7 @@ import { StyleSheet, ImageBackground, View, Dimensions } from 'react-native';
 import { Provider as PaperProvider, Text, Button, TextInput } from 'react-native-paper';
 import React from 'react';
 import { Link } from 'expo-router';
+import { signUpNewUser } from '../utils/AccountVerification';
 
 const { height } = Dimensions.get('window');
 
@@ -62,7 +63,7 @@ export default function SignUp() {
                         </Text>
                     </View>
                     <View style={styles.buttonContainer}>
-                        <Button style={styles.button} labelStyle={styles.buttonText} mode="contained" onPress={() => console.log('Pressed')} rippleColor="rgba(0, 0, 0, 0.2)">
+                        <Button style={styles.button} labelStyle={styles.buttonText} mode="contained" onPress={() => signUpNewUser(email, password)} rippleColor="rgba(0, 0, 0, 0.2)">
                             SIGN UP
                         </Button>
                         <Text style={styles.loginText}>Already have an account? <Link style={styles.link} href="/SignIn">Sign in instead.</Link></Text>
