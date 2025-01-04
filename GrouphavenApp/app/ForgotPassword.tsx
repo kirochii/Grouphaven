@@ -5,10 +5,8 @@ import { Link } from 'expo-router';
 
 const { height } = Dimensions.get('window');
 
-export default function SignUp() {
+export default function ForgotPassword() {
     const [email, setEmail] = React.useState('');
-    const [password, setPassword] = React.useState('');
-    const [confirmPassword, setConfirmPassword] = React.useState('');
 
     return (
         <PaperProvider>
@@ -19,8 +17,8 @@ export default function SignUp() {
             >
                 <View style={styles.container}>
                     <View style={styles.headerContainer}>
-                        <Text style={styles.headerText}>Sign Up</Text>
-                        <Text style={styles.catchphraseText}>Haven is just a few steps away.</Text>
+                        <Text style={styles.headerText}>Sign In</Text>
+                        <Text style={styles.catchphraseText}>Welcome back! We missed you.</Text>
                     </View>
                     <View style={styles.inputContainer}>
                         <TextInput
@@ -32,40 +30,12 @@ export default function SignUp() {
                             onChangeText={(value) => setEmail(value)}
                             left={<TextInput.Icon icon="email" disabled={true} />}
                         />
-
-                        <TextInput
-                            placeholder="Password"
-                            mode='outlined'
-                            secureTextEntry
-                            style={styles.input}
-                            outlineStyle={styles.inputOutline}
-                            value={password}
-                            onChangeText={(value) => setPassword(value)}
-                            left={<TextInput.Icon icon="key" disabled={true} />}
-                        />
-
-                        <TextInput
-                            placeholder="Confirm Password"
-                            mode='outlined'
-                            secureTextEntry
-                            style={styles.input}
-                            outlineStyle={styles.inputOutline}
-                            value={confirmPassword}
-                            onChangeText={(value) => setConfirmPassword(value)}
-                            left={<TextInput.Icon icon="key" disabled={true} />}
-                        />
-
-                        <Text style={styles.termText}>
-                            By continuing, you agree to our{' '}
-                            <Text style={styles.link}>Terms of Service</Text> and acknowledge that you have read our{' '}
-                            <Text style={styles.link}>Privacy Policy</Text>.
-                        </Text>
                     </View>
                     <View style={styles.buttonContainer}>
                         <Button style={styles.button} labelStyle={styles.buttonText} mode="contained" onPress={() => console.log('Pressed')} rippleColor="rgba(0, 0, 0, 0.2)">
-                            SIGN UP
+                            SIGN IN
                         </Button>
-                        <Text style={styles.loginText}>Already have an account? <Link style={styles.link} href="/SignIn">Sign in instead.</Link></Text>
+                        <Text style={styles.signupText}>Don't have an account? <Link style={styles.link} href="/SignUp">Sign up instead.</Link></Text>
                     </View>
                 </View>
             </ImageBackground>
@@ -100,7 +70,6 @@ const styles = StyleSheet.create({
     },
     inputContainer: {
         flexShrink: 1,
-        alignItems: 'center',
         gap: '5%',
         justifyContent: 'center',
     },
@@ -130,22 +99,22 @@ const styles = StyleSheet.create({
         color: '#32353b',
         paddingVertical: '1%',
     },
-    termText: {
-        fontFamily: 'Inter-Regular',
-        fontSize: 14,
-        color: 'white',
-        textAlign: 'center',
-    },
     link: {
         fontFamily: 'Inter-SemiBold',
         textDecorationLine: 'underline',
         color: 'white',
     },
-    loginText: {
+    signupText: {
         paddingTop: '5%',
         fontFamily: 'Inter-Regular',
         fontSize: 16,
         color: 'white',
         textAlign: 'center',
     },
+    forgotText: {
+        fontFamily: 'Inter-SemiBold',
+        color: 'white',
+        fontSize: 16,
+        textAlign: 'right',
+    }
 });

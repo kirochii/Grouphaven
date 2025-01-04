@@ -29,7 +29,7 @@ export default function index() {
             </Button>
             <Button style={styles.button} labelStyle={styles.buttonText}
               mode="contained"
-              onPress={() => console.log('Pressed')} rippleColor="rgba(0, 0, 0, 0.2)"
+              onPress={() => router.navigate("/SignIn")} rippleColor="rgba(0, 0, 0, 0.2)"
             >
               SIGN IN
             </Button>
