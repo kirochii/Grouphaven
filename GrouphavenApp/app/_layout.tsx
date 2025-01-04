@@ -1,39 +1,41 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
+import { Stack } from "expo-router";
 import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
-import 'react-native-reanimated';
 
-import { useColorScheme } from '@/hooks/useColorScheme';
-
-// Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
-  const [loaded] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
+  const [loaded, error] = useFonts({
+    'Inter-Regular': require('../assets/fonts/Inter_28pt-Regular.ttf'),
+    'Inter-Bold': require('../assets/fonts/Inter_28pt-Bold.ttf'),
+    'Inter-Black': require('../assets/fonts/Inter_28pt-Black.ttf'),
+    'Inter-ExtraBold': require('../assets/fonts/Inter_28pt-ExtraBold.ttf'),
+    'Inter-ExtraLight': require('../assets/fonts/Inter_28pt-ExtraLight.ttf'),
+    'Inter-Light': require('../assets/fonts/Inter_28pt-Light.ttf'),
+    'Inter-Medium': require('../assets/fonts/Inter_28pt-Medium.ttf'),
+    'Inter-SemiBold': require('../assets/fonts/Inter_28pt-SemiBold.ttf'),
   });
 
   useEffect(() => {
-    if (loaded) {
+    if (loaded || error) {
       SplashScreen.hideAsync();
     }
-  }, [loaded]);
+  }, [loaded, error]);
 
-  if (!loaded) {
+  if (!loaded && !error) {
     return null;
   }
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="+not-found" />
-      </Stack>
-      <StatusBar style="auto" />
-    </ThemeProvider>
+    <Stack screenOptions={{
+      animation: 'fade',
+      presentation: 'transparentModal',
+    }}>
+      <Stack.Screen name="index" options={{ headerShown: false }} />
+      <Stack.Screen name="SignUp" options={{ headerShown: false }} />
+      <Stack.Screen name="SignIn" options={{ headerShown: false }} />
+      <Stack.Screen name="ForgotPassword" options={{ headerShown: false }} />
+    </Stack>
   );
 }
