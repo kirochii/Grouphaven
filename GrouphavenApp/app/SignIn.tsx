@@ -8,7 +8,6 @@ const { height } = Dimensions.get('window');
 export default function SignIn() {
     const [email, setEmail] = React.useState('');
     const [password, setPassword] = React.useState('');
-
     return (
         <PaperProvider>
             <ImageBackground
