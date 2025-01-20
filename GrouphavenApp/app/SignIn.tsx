@@ -1,13 +1,33 @@
 import { StyleSheet, ImageBackground, View, Dimensions } from 'react-native';
 import { Provider as PaperProvider, Text, Button, TextInput } from 'react-native-paper';
 import React from 'react';
-import { Link } from 'expo-router';
+import { Link, router } from 'expo-router';
+import { signInWithEmail, signOut } from '../utils/AccountVerification';
 
 const { height } = Dimensions.get('window');
 
 export default function SignIn() {
     const [email, setEmail] = React.useState('');
     const [password, setPassword] = React.useState('');
+    const [userExistError, setUserExistError] = React.useState('');
+
+    const handleSignIn = async () => {
+        const response = await signInWithEmail(email, password);
+
+        if (!response.success) {
+            if (response.error?.message === 'Email not confirmed') {
+                router.replace(`../VerifyEmail?email=${email}`);
+            } else {
+                setUserExistError('⚠︎ Incorrect email or password');
+            }
+        } else {
+            console.log('User ID:', response.userId);
+            signOut();
+
+            //router.replace(`../VerifyEmail?email=${email}`);
+        }
+    };
+
     return (
         <PaperProvider>
             <ImageBackground
@@ -43,12 +63,18 @@ export default function SignIn() {
                         />
                         <Link style={styles.forgotText} href="/ForgotPassword">Forgot password?</Link>
                     </View>
+
+                    <View style={styles.errorContainer}>
+                        {userExistError ? <Text style={styles.errorText}>{userExistError}</Text> : null}
+                    </View>
+
                     <View style={styles.buttonContainer}>
-                        <Button style={styles.button} labelStyle={styles.buttonText} mode="contained" onPress={() => console.log('Pressed')} rippleColor="rgba(0, 0, 0, 0.2)">
+                        <Button style={styles.button} labelStyle={styles.buttonText} mode="contained" onPress={() => handleSignIn()} rippleColor="rgba(0, 0, 0, 0.2)">
                             SIGN IN
                         </Button>
                         <Text style={styles.signupText}>Don't have an account? <Link style={styles.link} href="/SignUp">Sign up instead.</Link></Text>
                     </View>
+
                 </View>
             </ImageBackground>
         </PaperProvider>
@@ -66,7 +92,7 @@ const styles = StyleSheet.create({
         flexDirection: 'column',
     },
     headerContainer: {
-        flex: 1,
+        flex: 3,
         alignItems: 'flex-start',
         justifyContent: 'center',
     },
@@ -95,7 +121,7 @@ const styles = StyleSheet.create({
         borderRadius: 25,
     },
     buttonContainer: {
-        flex: 1,
+        flex: 3,
         width: '100%',
         alignItems: 'center',
         justifyContent: 'center',
@@ -128,5 +154,19 @@ const styles = StyleSheet.create({
         color: 'white',
         fontSize: 16,
         textAlign: 'right',
-    }
+    },
+    errorContainer: {
+        flex: 1,
+        width: '100%',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    errorText: {
+        color: 'white',
+        fontFamily: 'Inter-Medium',
+        fontSize: 14,
+        backgroundColor: '#D32F2F',
+        borderRadius: 15,
+        padding: '3%',
+    },
 });

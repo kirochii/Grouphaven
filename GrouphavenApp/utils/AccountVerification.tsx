@@ -8,6 +8,29 @@ export async function signUpNewUser(inputEmail: string, inputPassword: string) {
             emailRedirectTo: 'https://grouphaven.netlify.app/',
         },
     })
+
+    if (error) {
+        return { success: false, error };
+    }
+
+    return { success: true, data };
+}
+
+export async function signInWithEmail(inputEmail: string, inputPassword: string) {
+    const { data, error } = await supabase.auth.signInWithPassword({
+        email: inputEmail,
+        password: inputPassword,
+    })
+
+    if (error) {
+        return { success: false, error };
+    } else {
+        return { success: true, userId: data.user.id }; // Return user ID
+    }
+}
+
+export async function signOut() {
+    const { error } = await supabase.auth.signOut()
 }
 
 export async function resendConfirmationEmail(inputEmail: string) {
@@ -40,20 +63,22 @@ export async function checkEmailConfirmation(email: string) {
     return data;
 }
 
-
 // Validate Email format
 export const validateEmail = (email: string) => {
+    const trimmedEmail = email.trim();
     const regex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/;
-    return regex.test(email);
+    return regex.test(trimmedEmail);
 };
 
-// Validate Password format (8 to 15 characters, at least one lowercase, one uppercase, one digit, and one special character)
+// Validate Password format
 export const validatePassword = (password: string) => {
-    const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,15}$/;
-    return regex.test(password);
+    const trimmedPassword = password.trim();
+    const regex = /^[A-Za-z\d@$!%*?&]{8,15}$/;
+    return regex.test(trimmedPassword);
 };
 
 // Validate Confirm Password match
 export const validateConfirmPassword = (password: string, confirmPassword: string) => {
-    return password === confirmPassword;
+    const trimmedPassword = password.trim();
+    return trimmedPassword === confirmPassword;
 };

@@ -37,6 +37,7 @@ export default function RootLayout() {
       <Stack.Screen name="VerifyEmail" options={{ headerShown: false }} />
       <Stack.Screen name="SignIn" options={{ headerShown: false }} />
       <Stack.Screen name="ForgotPassword" options={{ headerShown: false }} />
+      <Stack.Screen name="CompleteProfile" options={{ headerShown: false }} />
     </Stack>
   );
 }

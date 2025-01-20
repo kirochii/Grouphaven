@@ -14,35 +14,43 @@ export default function SignUp() {
     const [emailError, setEmailError] = React.useState('');
     const [passwordError, setPasswordError] = React.useState('');
     const [confirmPasswordError, setConfirmPasswordError] = React.useState('');
+    const [userExistError, setUserExistError] = React.useState('');
 
     const validateInputs = () => {
-        let isValid = true;
+        setEmailError('');
+        setPasswordError('');
+        setConfirmPasswordError('');
+        setUserExistError('');
 
         // Validate Email
         if (!validateEmail(email)) {
-            setEmailError('Please enter a valid email');
-            isValid = false;
-        } else {
-            setEmailError('');
+            setEmailError('⚠︎ Please enter a valid email');
+            return false;
         }
 
         // Validate Password
         if (!validatePassword(password)) {
-            setPasswordError('Password must be between 8 and 15 characters, contain at least one lowercase letter, one uppercase letter, one numeric digit, and one special character');
-            isValid = false;
-        } else {
-            setPasswordError('');
+            setPasswordError('⚠︎ Password must be between 8 and 15 characters');
+            return false;
         }
 
         // Validate Confirm Password
         if (!validateConfirmPassword(password, confirmPassword)) {
-            setConfirmPasswordError('Passwords do not match');
-            isValid = false;
-        } else {
-            setConfirmPasswordError('');
+            setConfirmPasswordError('⚠︎ Passwords do not match');
+            return false;
         }
 
-        return isValid;
+        return true;
+    };
+
+    const handleSignUp = async () => {
+        const response = await signUpNewUser(email, password);
+
+        if (!response.success) {
+            setUserExistError('⚠︎ Email already registered');
+        } else {
+            router.replace(`../VerifyEmail?email=${email}`);
+        }
     };
 
     return (
@@ -68,7 +76,6 @@ export default function SignUp() {
                             left={<TextInput.Icon icon="email" disabled={true} />}
                             error={!!emailError}
                         />
-                        {emailError ? <Text style={styles.errorText}>{emailError}</Text> : null}
 
                         <TextInput
                             placeholder="Password"
@@ -81,7 +88,6 @@ export default function SignUp() {
                             left={<TextInput.Icon icon="key" disabled={true} />}
                             error={!!passwordError}
                         />
-                        {passwordError ? <Text style={styles.errorText}>{passwordError}</Text> : null}
 
                         <TextInput
                             placeholder="Confirm Password"
@@ -94,19 +100,25 @@ export default function SignUp() {
                             left={<TextInput.Icon icon="key" disabled={true} />}
                             error={!!confirmPasswordError}
                         />
-                        {confirmPasswordError ? <Text style={styles.errorText}>{confirmPasswordError}</Text> : null}
 
                         <Text style={styles.termText}>
                             By continuing, you agree to our{' '}
                             <Text style={styles.link}>Terms of Service</Text> and acknowledge that you have read our{' '}
                             <Text style={styles.link}>Privacy Policy</Text>.
                         </Text>
+
+                        <View style={styles.buttonContainer}>
+                            {emailError ? <Text style={styles.errorText}>{emailError}</Text> : null}
+                            {passwordError ? <Text style={styles.errorText}>{passwordError}</Text> : null}
+                            {confirmPasswordError ? <Text style={styles.errorText}>{confirmPasswordError}</Text> : null}
+                            {userExistError ? <Text style={styles.errorText}>{userExistError}</Text> : null}
+                        </View>
+
                     </View>
                     <View style={styles.buttonContainer}>
                         <Button style={styles.button} labelStyle={styles.buttonText} mode="contained" onPress={() => {
                             if (validateInputs()) {
-                                signUpNewUser(email, password);
-                                router.replace(`../VerifyEmail?email=${email}`);
+                                handleSignUp();
                             }
                         }} rippleColor="rgba(0, 0, 0, 0.2)">
                             SIGN UP
@@ -195,8 +207,11 @@ const styles = StyleSheet.create({
         textAlign: 'center',
     },
     errorText: {
-        color: 'red',
-        fontFamily: 'Inter-Regular',
-        fontSize: 12,
+        color: 'white',
+        fontFamily: 'Inter-Medium',
+        fontSize: 14,
+        backgroundColor: '#D32F2F',
+        borderRadius: 15,
+        padding: '3%',
     },
 });
