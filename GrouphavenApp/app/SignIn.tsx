@@ -2,7 +2,7 @@ import { StyleSheet, ImageBackground, View, Dimensions } from 'react-native';
 import { Provider as PaperProvider, Text, Button, TextInput } from 'react-native-paper';
 import React from 'react';
 import { Link, router } from 'expo-router';
-import { signInWithEmail, signOut } from '../utils/AccountVerification';
+import { signInWithEmail, userExist } from '../utils/AccountVerification';
 
 const { height } = Dimensions.get('window');
 
@@ -21,10 +21,17 @@ export default function SignIn() {
                 setUserExistError('⚠︎ Incorrect email or password');
             }
         } else {
-            console.log('User ID:', response.userId);
-            signOut();
+            if (response.userId) {
+                const exist = await userExist(response.userId);
 
-            //router.replace(`../VerifyEmail?email=${email}`);
+                if (exist) {
+                    router.dismissAll();
+                    router.replace(`../(tabs)/Match`);
+                } else {
+                    router.dismissAll();
+                    router.replace(`../CompleteProfile`);
+                }
+            }
         }
     };
 

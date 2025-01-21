@@ -82,3 +82,16 @@ export const validateConfirmPassword = (password: string, confirmPassword: strin
     const trimmedPassword = password.trim();
     return trimmedPassword === confirmPassword;
 };
+
+export async function userExist(id: string) {
+    const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', id);
+
+    if (data && data.length > 0) {
+        return true;
+    } else {
+        return false;
+    }
+}

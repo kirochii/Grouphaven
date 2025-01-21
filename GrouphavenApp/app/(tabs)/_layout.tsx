@@ -1,0 +1,25 @@
+import { Stack } from "expo-router";
+import { useFonts } from 'expo-font';
+
+export default function TabLayout() {
+    const [loaded, error] = useFonts({
+        'Inter-Regular': require('../../assets/fonts/Inter_28pt-Regular.ttf'),
+        'Inter-Bold': require('../../assets/fonts/Inter_28pt-Bold.ttf'),
+        'Inter-Black': require('../../assets/fonts/Inter_28pt-Black.ttf'),
+        'Inter-ExtraBold': require('../../assets/fonts/Inter_28pt-ExtraBold.ttf'),
+        'Inter-ExtraLight': require('../../assets/fonts/Inter_28pt-ExtraLight.ttf'),
+        'Inter-Light': require('../../assets/fonts/Inter_28pt-Light.ttf'),
+        'Inter-Medium': require('../../assets/fonts/Inter_28pt-Medium.ttf'),
+        'Inter-SemiBold': require('../../assets/fonts/Inter_28pt-SemiBold.ttf'),
+    });
+
+    return (
+        <Stack screenOptions={{
+            animation: 'fade',
+            presentation: 'transparentModal',
+        }}>
+            <Stack.Screen name="Account" options={{ headerShown: false }} />
+            <Stack.Screen name="Match" options={{ headerShown: false }} />
+        </Stack>
+    );
+}

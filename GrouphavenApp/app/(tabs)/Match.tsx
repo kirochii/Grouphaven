@@ -5,7 +5,7 @@ import { Link } from 'expo-router';
 
 const { height } = Dimensions.get('window');
 
-export default function Account() {
+export default function Match() {
     const [email, setEmail] = React.useState('');
     const [password, setPassword] = React.useState('');
 
@@ -15,7 +15,7 @@ export default function Account() {
                 resizeMode="cover"
                 style={styles.background}
             >
-                <Text>Account</Text>
+                <Text>Match</Text>
             </ImageBackground>
         </PaperProvider>
     );
