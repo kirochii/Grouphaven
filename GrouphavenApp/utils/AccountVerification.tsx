@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import * as SecureStore from 'expo-secure-store';
 
 export async function signUpNewUser(inputEmail: string, inputPassword: string) {
     const { data, error } = await supabase.auth.signUp({
@@ -25,12 +26,14 @@ export async function signInWithEmail(inputEmail: string, inputPassword: string)
     if (error) {
         return { success: false, error };
     } else {
+        await SecureStore.setItemAsync('userId', data.user.id);
         return { success: true, userId: data.user.id }; // Return user ID
     }
 }
 
 export async function signOut() {
-    const { error } = await supabase.auth.signOut()
+    const { error } = await supabase.auth.signOut();
+    await SecureStore.deleteItemAsync('userId');
 }
 
 export async function resendConfirmationEmail(inputEmail: string) {

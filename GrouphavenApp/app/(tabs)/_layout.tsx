@@ -1,5 +1,6 @@
-import { Stack } from "expo-router";
+import { Tabs } from "expo-router";
 import { useFonts } from 'expo-font';
+import { Icon } from 'react-native-paper';
 
 export default function TabLayout() {
     const [loaded, error] = useFonts({
@@ -14,12 +15,27 @@ export default function TabLayout() {
     });
 
     return (
-        <Stack screenOptions={{
+        <Tabs screenOptions={{
             animation: 'fade',
-            presentation: 'transparentModal',
         }}>
-            <Stack.Screen name="Account" options={{ headerShown: false }} />
-            <Stack.Screen name="Match" options={{ headerShown: false }} />
-        </Stack>
+            <Tabs.Screen
+                name="Account"
+                options={{
+                    headerShown: false,
+                    tabBarIcon: ({ focused }) => (
+                        <Icon source={focused ? 'account' : 'account-outline'} color={'#519CFF'} size={24} />
+                    ),
+                }}
+            />
+            <Tabs.Screen
+                name="Match"
+                options={{
+                    headerShown: false,
+                    tabBarIcon: () => (
+                        <Icon source={'magnify'} color={'#519CFF'} size={24} />
+                    ),
+                }}
+            />
+        </Tabs>
     );
 }

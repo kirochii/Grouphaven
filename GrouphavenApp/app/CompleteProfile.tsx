@@ -1,14 +1,17 @@
 import { StyleSheet, ImageBackground, View, Dimensions } from 'react-native';
-import { Provider as PaperProvider, Text, Button, TextInput, IconButton } from 'react-native-paper';
+import { Provider as PaperProvider, Text, Button, TextInput, IconButton, HelperText, } from 'react-native-paper';
 import DatePicker from '@dietime/react-native-date-picker';
 import { Dropdown } from 'react-native-element-dropdown';
+import { router } from 'expo-router';
 import React from 'react';
+import { addUser } from '../utils/Account';
 
 const { height } = Dimensions.get('window');
 
 export default function CompleteProfile() {
     const [inputText, setInputText] = React.useState('');
     const [noticeText, setNoticeText] = React.useState('');
+    const [errorText, setErrorText] = React.useState('');
     const CITIES = [
         { label: 'Kuala Lumpur', value: 'kuala_lumpur' },
         { label: 'Seberang Jaya', value: 'seberang_jaya' },
@@ -63,7 +66,7 @@ export default function CompleteProfile() {
     const [name, setName] = React.useState('');
     const [dob, setDOB] = React.useState<Date>(new Date());
     const [selectedGender, setSelectedGender] = React.useState<'male' | 'female' | null>(null);
-    const [city, setCity] = React.useState<string>();
+    const [city, setCity] = React.useState<string | null>(null);
     const [isFocus, setIsFocus] = React.useState(false);
 
     React.useEffect(() => {
@@ -82,6 +85,94 @@ export default function CompleteProfile() {
             setNoticeText('');
         }
     }, [step]);
+
+    const hasError = () => {
+        const nameRegex = /^[a-zA-Z\s]{2,}$/;
+
+        switch (step) {
+            case 1:
+                if (name.trim().length === 0) {
+                    setErrorText('Error: Name must not be empty');
+                    return true;
+                } else if (nameRegex.test(name) === false) {
+                    setErrorText('Error: Only letters and spaces are allowed');
+                    return true;
+                } else {
+                    setErrorText('');
+                    return false;
+                }
+            case 2:
+                setErrorText('');
+                return false;
+            case 3:
+                if (selectedGender === null) {
+                    setErrorText('Error: Select a gender to proceed');
+                    return true;
+                } else {
+                    setErrorText('');
+                    return false;
+                }
+            case 4:
+                if (city === null) {
+                    setErrorText('Error: Select a city to proceed');
+                    return true;
+                } else {
+                    setErrorText('');
+                    return false;
+                }
+        }
+    };
+
+    const handleCompleteProfile = () => {
+        addUser(name, dob, selectedGender, city);
+        router.replace(`../(tabs)/Account`);
+    }
+
+    const renderContent = () => {
+        switch (step) {
+            case 1:
+            case 2:
+            case 3:
+            case 4:
+                return (
+                    <View>
+                        <Text style={styles.headerText}>COMPLETE YOUR PROFILE</Text>
+                        <Text style={styles.subText}>{`STEP ${step} OF 4`}</Text>
+                        <View style={styles.promptContainer}>
+                            {inputText ? <Text style={styles.inputText}>{inputText}</Text> : null}
+                            {noticeText ? <Text style={styles.noticeText}>{noticeText}</Text> : null}
+
+                            <View>{renderStepContent()}</View>
+
+                            <HelperText type="error" visible={true} style={styles.errorText}>
+                                {errorText}
+                            </HelperText>
+
+                            <View style={styles.LRcontainer}>
+                                {step < 5 && (
+                                    <Button mode='text' onPress={() => { if (hasError() === false) { setStep(step + 1); } }} labelStyle={styles.continueText} rippleColor="transparent">
+                                        CONTINUE
+                                    </Button>
+                                )}
+                                {step > 1 && step < 5 && (
+                                    <Button mode='text' onPress={() => { setStep(step - 1); setErrorText('') }} labelStyle={styles.backText} rippleColor="transparent">BACK</Button>
+                                )}
+                            </View>
+                        </View>
+                    </View>
+                );
+            case 5:
+                return (
+                    <View style={styles.container}>
+                        <Text style={styles.finalHeader}>YOU'RE ALL SET!</Text>
+                        <Text style={styles.finalText}>Welcome to Grouphaven, a place where you belong.</Text>
+                        <Button style={styles.button} labelStyle={styles.buttonText} mode="contained" onPress={() => handleCompleteProfile()} rippleColor="rgba(0, 0, 0, 0.2)">
+                            LET'S GO!
+                        </Button>
+                    </View>
+                );
+        }
+    };
 
     const renderStepContent = () => {
         switch (step) {
@@ -163,24 +254,8 @@ export default function CompleteProfile() {
                         }}
                     />
                 );
-            case 5:
-                return (
-                    <Text>5</Text>
-                );
         }
     };
-
-
-
-
-
-
-
-
-
-
-
-
 
     return (
         <PaperProvider>
@@ -190,25 +265,7 @@ export default function CompleteProfile() {
                 style={styles.background}
             >
                 <View style={styles.container}>
-                    <Text style={styles.headerText}>COMPLETE YOUR PROFILE</Text>
-                    <Text style={styles.subText}>{`STEP ${step} OF 4`}</Text>
-                    <View style={styles.promptContainer}>
-                        {inputText ? <Text style={styles.inputText}>{inputText}</Text> : null}
-                        {noticeText ? <Text style={styles.noticeText}>{noticeText}</Text> : null}
-
-                        <View>{renderStepContent()}</View>
-
-                        <View style={styles.LRcontainer}>
-                            {step < 5 && (
-                                <Button mode='text' onPress={() => setStep(step + 1)} labelStyle={styles.continueText} rippleColor="transparent">
-                                    CONTINUE
-                                </Button>
-                            )}
-                            {step > 1 && step < 5 && (
-                                <Button mode='text' onPress={() => setStep(step - 1)} labelStyle={styles.backText} rippleColor="transparent">BACK</Button>
-                            )}
-                        </View>
-                    </View>
+                    <View>{renderContent()}</View>
                 </View>
             </ImageBackground>
         </PaperProvider>
@@ -269,7 +326,7 @@ const styles = StyleSheet.create({
         color: '#949494',
     },
     LRcontainer: {
-        marginTop: '10%',
+        marginTop: '5%',
         flexDirection: 'row-reverse',
         justifyContent: 'space-between',
     },
@@ -317,5 +374,36 @@ const styles = StyleSheet.create({
     selectedTextStyle: {
         fontFamily: 'Inter-Regular',
         fontSize: 16,
+    },
+    finalHeader: {
+        fontFamily: 'Inter-Bold',
+        fontSize: 24,
+        color: 'white',
+        textAlign: 'center',
+    },
+    finalText: {
+        fontFamily: 'Inter-Regular',
+        fontSize: 16,
+        color: 'white',
+        textAlign: 'center',
+    },
+    button: {
+        alignSelf: 'center',
+        backgroundColor: 'white',
+        borderRadius: 10,
+        width: '35%',
+        marginTop: '10%',
+    },
+    buttonText: {
+        fontFamily: 'Inter-Bold',
+        fontSize: 16,
+        color: '#519CFF',
+        marginHorizontal: '5%',
+        marginVertical: '5%',
+    },
+    errorText: {
+        fontFamily: 'Inter-Regular',
+        fontSize: 12,
+        color: 'red',
     },
 });
