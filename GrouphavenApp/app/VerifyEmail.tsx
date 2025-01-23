@@ -93,7 +93,7 @@ export default function VerifyEmail() {
                     <View style={styles.buttonContainer}>
                         <Button style={[styles.buttonOutline, isDisabled || isRedirectDisabled ? styles.disabledButton : null]} labelStyle={[styles.buttonOutlineText, isDisabled || isRedirectDisabled ? styles.disabledButton : null]} mode="outlined" onPress={handleResend}
                             disabled={isDisabled || isRedirectDisabled} rippleColor="rgba(0, 0, 0, 0.2)">
-                            {isDisabled ? `Resend (${countdown}s)` : 'Resend'}
+                            {isDisabled ? `RESEND (${countdown}s)` : 'RESEND'}
                         </Button>
                         <Button disabled={isRedirectDisabled} style={[styles.button, isRedirectDisabled ? styles.disabledContainedButton : null]} labelStyle={[styles.buttonText, isRedirectDisabled ? styles.disabledContainedButtonText : null]} mode="contained" onPress={() => router.navigate("/SignIn")} rippleColor="rgba(0, 0, 0, 0.2)">
                             PROCEED WITH SIGN IN

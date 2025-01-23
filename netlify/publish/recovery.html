@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reset Password</title>
+    <link rel="icon" type="image" href="/GrouphavenApp/assets/images/iconWhite.png">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #519CFF;
+            color: white;
+            text-align: center;
+        }
+
+        img {
+            width: 5rem;
+            height: 5rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 900;
+            margin-left: 5%;
+        }
+
+        .banner {
+            flex-direction: row;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 3%;
+        }
+
+        .card {
+            display: flex;
+            color: black;
+            background-color: white;
+            width: 15%;
+            height: 40%;
+            border-radius: 15px;
+            flex-direction: column;
+        }
+
+        h2 {
+            font-weight: 600;
+            color: #519CFF;
+        }
+
+        h3 {
+            margin: 0 10%;
+            text-align: left;
+            font-size: 1rem;
+            font-weight: 400;
+            color: #949494;
+        }
+
+        form {
+            display: flex;
+            flex: 2;
+            flex-direction: column;
+            text-align: left;
+            margin: 10%;
+            row-gap: 10%;
+        }
+
+        label {
+            font-size: medium;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        input {
+            border: solid 1px gray;
+            height: 50%;
+            border-radius: 3px;
+            width: 100%;
+            background-color: #fafafa;
+        }
+
+        button {
+            background-color: #519CFF;
+            color: white;
+            border: 0;
+            border-radius: 5px;
+            height: 13%;
+        }
+
+        button:hover {
+            cursor: pointer;
+            background-color: #417dcc;
+            transition: 0.5s;
+        }
+
+        .error {
+            color: red;
+            font-size: 0.8rem;
+            height: 15%;
+        }
+
+        #cardHeader {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="banner">
+        <img src="../../GrouphavenApp/assets/images/iconWhite.png">
+        <h1>GROUPHAVEN</h1>
+    </div>
+
+    <div class="card">
+        <div id="cardHeader">
+            <h2>Reset password</h2>
+            <h3>Enter a new password below to change your password.</h3>
+        </div>
+
+        <form id="passwordForm">
+            <div class="form-group">
+                <label for="newPassword">New password</label>
+                <br>
+                <input type="password" id="newPassword" maxlength="15">
+            </div>
+            <div class="form-group">
+                <label for="confirmPassword">Confirm password</label>
+                <br>
+                <input type="password" id="confirmPassword" maxlength="15">
+            </div>
+            <div class="error" id="error"></div>
+            <button class="form-group" type="submit">Change Password</button>
+        </form>
+
+    </div>
+    <script type="module">
+        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+
+        const supabaseUrl = 'https://lrryxyalvumuuvefxhrg.supabase.co';
+        const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxycnl4eWFsdnVtdXV2ZWZ4aHJnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzM1NDI1MTUsImV4cCI6MjA0OTExODUxNX0.OPUCbJI_3ufrSJ7dX7PH6XCpL5jj8cn9dv9AwvX4y_c';
+
+        const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+            auth: {
+                autoRefreshToken: true,
+                persistSession: true,
+                detectSessionInUrl: false,
+            },
+        });
+
+        document.getElementById('passwordForm').addEventListener('submit', async function (event) {
+            event.preventDefault();
+
+            var newPassword = document.getElementById('newPassword').value;
+            var confirmPassword = document.getElementById('confirmPassword').value;
+            var errorDiv = document.getElementById('error');
+
+            const regex = /^[A-Za-z\d@$!%*?&]{8,15}$/;
+
+            // Check if passwords match
+            if (!regex.test(newPassword)) {
+                errorDiv.textContent = '⚠︎ Password must be between 8 and 15 characters';
+            } else if (newPassword.trim() !== confirmPassword) {
+                errorDiv.textContent = '⚠︎ Passwords do not match';
+            } else {
+                errorDiv.textContent = '';
+
+                const { data, error } = await supabase.auth.updateUser({
+                    password: confirmPassword
+                })
+
+                document.getElementById('passwordForm').style.display = 'none';
+                document.getElementById('cardHeader').style.textAlign = 'center';
+                document.getElementById('cardHeader').children[0].textContent = "Password successfully changed"
+                document.getElementById('cardHeader').children[1].textContent = "You may close this tab and proceed to sign in."
+            }
+        });
+
+
+    </script>
+</body>
+
+</html>

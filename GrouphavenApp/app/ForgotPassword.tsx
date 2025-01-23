@@ -1,12 +1,48 @@
 import { StyleSheet, ImageBackground, View, Dimensions } from 'react-native';
-import { Provider as PaperProvider, Text, Button, TextInput } from 'react-native-paper';
-import React from 'react';
-import { Link } from 'expo-router';
+import { Provider as PaperProvider, Text, Button, TextInput, } from 'react-native-paper';
+import React, { useEffect } from 'react';
+import { router } from 'expo-router';
+import { resetPassword, validateEmail, } from '../utils/AccountVerification';
 
 const { height } = Dimensions.get('window');
 
 export default function ForgotPassword() {
     const [email, setEmail] = React.useState('');
+
+    const [countdown, setCountdown] = React.useState(10);
+    const [isDisabled, setIsDisabled] = React.useState(false);
+    const [bgColor, setBgColor] = React.useState('');
+    const [error, setError] = React.useState(' ');
+
+    useEffect(() => {
+        let timer: ReturnType<typeof setInterval>;
+
+        if (isDisabled && countdown > 0) {
+            timer = setInterval(() => {
+                setCountdown(prev => prev - 1);
+            }, 1000); // Decrease countdown every second
+        } else if (countdown === 0) {
+            setIsDisabled(false); // Enable the button once countdown reaches 0
+        }
+
+        return () => clearInterval(timer); // Clean up interval on unmount or when countdown ends
+    }, [isDisabled, countdown]);
+
+    const handleButtonClick = () => {
+        setError('');
+
+        if (!validateEmail(email)) {
+            setError('⚠︎ Please enter a valid email');
+            setBgColor("#D32F2F");
+            return false;
+        } else {
+            setBgColor("transparent");
+            setError('A password reset link has been sent to your email!');
+            setIsDisabled(true);
+            setCountdown(10);
+            resetPassword(email);
+        }
+    };
 
     return (
         <PaperProvider>
@@ -17,8 +53,8 @@ export default function ForgotPassword() {
             >
                 <View style={styles.container}>
                     <View style={styles.headerContainer}>
-                        <Text style={styles.headerText}>Sign In</Text>
-                        <Text style={styles.catchphraseText}>Welcome back! We missed you.</Text>
+                        <Text style={styles.headerText}>RESET PASSWORD</Text>
+                        <Text style={styles.catchphraseText}>A password reset link will be sent to your email.</Text>
                     </View>
                     <View style={styles.inputContainer}>
                         <TextInput
@@ -30,12 +66,17 @@ export default function ForgotPassword() {
                             onChangeText={(value) => setEmail(value)}
                             left={<TextInput.Icon icon="email" disabled={true} />}
                         />
+                        <View style={styles.errorContainer}>
+                            {error ? <Text style={[styles.errorText, { backgroundColor: bgColor }]}>{error}</Text> : null}
+                        </View>
                     </View>
                     <View style={styles.buttonContainer}>
-                        <Button style={styles.button} labelStyle={styles.buttonText} mode="contained" onPress={() => console.log('Pressed')} rippleColor="rgba(0, 0, 0, 0.2)">
-                            SIGN IN
+                        <Button style={[styles.buttonOutline, isDisabled ? styles.disabledButton : null]} labelStyle={[styles.buttonOutlineText, isDisabled ? styles.disabledButton : null]} mode="outlined" onPress={() => handleButtonClick()} rippleColor="rgba(0, 0, 0, 0.2)" disabled={isDisabled}>
+                            {isDisabled ? `${countdown}s` : 'REQUEST EMAIL'}
                         </Button>
-                        <Text style={styles.signupText}>Don't have an account? <Link style={styles.link} href="/SignUp">Sign up instead.</Link></Text>
+                        <Button style={styles.button} labelStyle={styles.buttonText} mode="contained" onPress={() => router.back()} rippleColor="rgba(0, 0, 0, 0.2)">
+                            BACK
+                        </Button>
                     </View>
                 </View>
             </ImageBackground>
@@ -60,18 +101,18 @@ const styles = StyleSheet.create({
     },
     headerText: {
         fontFamily: 'Inter-Bold',
-        fontSize: 60,
+        fontSize: 36,
         color: 'white',
     },
     catchphraseText: {
         fontFamily: 'Inter-Medium',
-        fontSize: 20,
+        fontSize: 18,
         color: 'white',
     },
     inputContainer: {
         flexShrink: 1,
         gap: '5%',
-        justifyContent: 'center',
+        justifyContent: 'flex-start',
     },
     input: {
         backgroundColor: 'white',
@@ -87,6 +128,7 @@ const styles = StyleSheet.create({
         width: '100%',
         alignItems: 'center',
         justifyContent: 'center',
+        gap: '5%',
     },
     button: {
         backgroundColor: 'white',
@@ -99,22 +141,33 @@ const styles = StyleSheet.create({
         color: '#32353b',
         paddingVertical: '1%',
     },
-    link: {
-        fontFamily: 'Inter-SemiBold',
-        textDecorationLine: 'underline',
-        color: 'white',
+    buttonOutline: {
+        borderColor: 'white',
+        borderWidth: 3,
+        borderRadius: 25,
+        width: '90%',
     },
-    signupText: {
-        paddingTop: '5%',
-        fontFamily: 'Inter-Regular',
-        fontSize: 16,
+    buttonOutlineText: {
+        fontFamily: 'Inter-Bold',
+        fontSize: 20,
         color: 'white',
-        textAlign: 'center',
+        paddingVertical: '1%',
     },
-    forgotText: {
-        fontFamily: 'Inter-SemiBold',
+    disabledButton: {
+        borderColor: 'rgba(255, 255, 255, 0.5)',
+        color: 'rgba(255, 255, 255, 0.5)',
+    },
+    errorContainer: {
+        width: '100%',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginTop: '5%',
+    },
+    errorText: {
         color: 'white',
-        fontSize: 16,
-        textAlign: 'right',
-    }
+        fontFamily: 'Inter-Medium',
+        fontSize: 14,
+        borderRadius: 15,
+        padding: '3%',
+    },
 });

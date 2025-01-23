@@ -98,3 +98,9 @@ export async function userExist(id: string) {
         return false;
     }
 }
+
+export async function resetPassword(email: string) {
+    const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: 'https://grouphaven.netlify.app/recovery',
+    })
+}
