@@ -158,7 +158,8 @@
             });
 
         async function handleReset() {
-            const urlParams = new URLSearchParams(window.location.search);
+            const fragment = window.location.hash;
+            const urlParams = new URLSearchParams(fragment.substring(1));
             const accessToken = urlParams.get('access_token');
 
             if (!accessToken) {
