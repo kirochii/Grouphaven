@@ -169,8 +169,8 @@
 
             const { error: sessionError } = await supabase.auth.setSession(accessToken);
 
-            if (signInError) {
-                console.error("Error signing in with reset token:", signInError.message);
+            if (sessionError) {
+                console.error("Error signing in with reset token:", sessionError.message);
                 return;
             }
 
