@@ -1,7 +1,8 @@
 import { StyleSheet, ImageBackground, View, Dimensions } from 'react-native';
 import { Provider as PaperProvider, Text, Button, TextInput } from 'react-native-paper';
 import React from 'react';
-import { Link } from 'expo-router';
+import { Link, router } from 'expo-router';
+import { signUpNewUser, validateEmail, validatePassword, validateConfirmPassword } from '../utils/AccountVerification';
 
 const { height } = Dimensions.get('window');
 
@@ -9,6 +10,48 @@ export default function SignUp() {
     const [email, setEmail] = React.useState('');
     const [password, setPassword] = React.useState('');
     const [confirmPassword, setConfirmPassword] = React.useState('');
+
+    const [emailError, setEmailError] = React.useState('');
+    const [passwordError, setPasswordError] = React.useState('');
+    const [confirmPasswordError, setConfirmPasswordError] = React.useState('');
+    const [userExistError, setUserExistError] = React.useState('');
+
+    const validateInputs = () => {
+        setEmailError('');
+        setPasswordError('');
+        setConfirmPasswordError('');
+        setUserExistError('');
+
+        // Validate Email
+        if (!validateEmail(email)) {
+            setEmailError('⚠︎ Please enter a valid email');
+            return false;
+        }
+
+        // Validate Password
+        if (!validatePassword(password)) {
+            setPasswordError('⚠︎ Password must be between 8 and 15 characters');
+            return false;
+        }
+
+        // Validate Confirm Password
+        if (!validateConfirmPassword(password, confirmPassword)) {
+            setConfirmPasswordError('⚠︎ Passwords do not match');
+            return false;
+        }
+
+        return true;
+    };
+
+    const handleSignUp = async () => {
+        const response = await signUpNewUser(email, password);
+
+        if (!response.success) {
+            setUserExistError('⚠︎ Email already registered');
+        } else {
+            router.replace(`../VerifyEmail?email=${email}`);
+        }
+    };
 
     return (
         <PaperProvider>
@@ -31,6 +74,7 @@ export default function SignUp() {
                             value={email}
                             onChangeText={(value) => setEmail(value)}
                             left={<TextInput.Icon icon="email" disabled={true} />}
+                            error={!!emailError}
                         />
 
                         <TextInput
@@ -42,6 +86,7 @@ export default function SignUp() {
                             value={password}
                             onChangeText={(value) => setPassword(value)}
                             left={<TextInput.Icon icon="key" disabled={true} />}
+                            error={!!passwordError}
                         />
 
                         <TextInput
@@ -53,6 +98,7 @@ export default function SignUp() {
                             value={confirmPassword}
                             onChangeText={(value) => setConfirmPassword(value)}
                             left={<TextInput.Icon icon="key" disabled={true} />}
+                            error={!!confirmPasswordError}
                         />
 
                         <Text style={styles.termText}>
@@ -60,9 +106,21 @@ export default function SignUp() {
                             <Text style={styles.link}>Terms of Service</Text> and acknowledge that you have read our{' '}
                             <Text style={styles.link}>Privacy Policy</Text>.
                         </Text>
+
+                        <View style={styles.buttonContainer}>
+                            {emailError ? <Text style={styles.errorText}>{emailError}</Text> : null}
+                            {passwordError ? <Text style={styles.errorText}>{passwordError}</Text> : null}
+                            {confirmPasswordError ? <Text style={styles.errorText}>{confirmPasswordError}</Text> : null}
+                            {userExistError ? <Text style={styles.errorText}>{userExistError}</Text> : null}
+                        </View>
+
                     </View>
                     <View style={styles.buttonContainer}>
-                        <Button style={styles.button} labelStyle={styles.buttonText} mode="contained" onPress={() => console.log('Pressed')} rippleColor="rgba(0, 0, 0, 0.2)">
+                        <Button style={styles.button} labelStyle={styles.buttonText} mode="contained" onPress={() => {
+                            if (validateInputs()) {
+                                handleSignUp();
+                            }
+                        }} rippleColor="rgba(0, 0, 0, 0.2)">
                             SIGN UP
                         </Button>
                         <Text style={styles.loginText}>Already have an account? <Link style={styles.link} href="/SignIn">Sign in instead.</Link></Text>
@@ -147,5 +205,13 @@ const styles = StyleSheet.create({
         fontSize: 16,
         color: 'white',
         textAlign: 'center',
+    },
+    errorText: {
+        color: 'white',
+        fontFamily: 'Inter-Medium',
+        fontSize: 14,
+        backgroundColor: '#D32F2F',
+        borderRadius: 15,
+        padding: '3%',
     },
 });

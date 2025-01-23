@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "Grouphaven",
-    "slug": "GrouphavenApp",
+    "name": "GrouphavenAdmin",
+    "slug": "GrouphavenAdmin",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -15,8 +15,7 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      },
-      "package": "com.anonymous.GrouphavenApp"
+      }
     },
     "web": {
       "bundler": "metro",
@@ -28,25 +27,15 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/icon.png",
+          "image": "./assets/images/splash-icon.png",
           "imageWidth": 200,
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
         }
-      ],
-      "expo-font",
-      "expo-secure-store"
+      ]
     ],
     "experiments": {
       "typedRoutes": true
-    },
-    "extra": {
-      "router": {
-        "origin": false
-      },
-      "eas": {
-        "projectId": "10c23484-d3b0-490b-be91-3ea184297a84"
-      }
     }
   }
 }
