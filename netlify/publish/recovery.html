@@ -158,51 +158,50 @@
             });
 
         async function handleReset() {
-            const { data, error } = await supabase.auth.updateUser({
-                password: confirmPassword
-            })
+            //method 1
+            try {
+                const { data, error } = await supabase.auth.updateUser({
+                    password: confirmPassword
+                });
 
-            if (error) {
-                console.error(error);
+                if (error) {
+                    console.error("Error updating user:", error.message);
+                } else {
+                    console.log("User updated successfully.");
+                }
+            } catch (err) {
+                console.error("Unexpected error 1:", err.message);
+            }
 
+            //method 2
+            try {
                 const fragment = window.location.hash;
                 const urlParams = new URLSearchParams(fragment.substring(1));
                 const accessToken = urlParams.get('access_token');
 
                 if (!accessToken) {
                     console.error("Reset token not found in URL.");
-                    return;
                 }
 
                 const { error: sessionError } = await supabase.auth.setSession(accessToken);
 
                 if (sessionError) {
                     console.error("Error signing in with reset token:", sessionError.message);
-                    return;
                 }
 
                 const { data, error } = await supabase.auth.updateUser({
                     password: confirmPassword
-                })
+                });
 
                 if (error) {
                     console.error("Error updating user:", error.message);
 
-                    const { data, error } = await supabase.auth.exchangeCodeForSession(accessToken);
-
-                    const { NewData, NewError } = await supabase.auth.updateUser({
-                        password: confirmPassword
-                    })
-
-                    if (NewError) {
-                        console.error("Error updating user:", NewError.message);
-                    }
-
-                } else {
-                    console.log("User updated successfully:", data);
                 }
+            } catch (err) {
+                console.error("Unexpected error during password reset process 2:", err.message);
             }
         }
+
 
         document.getElementById('passwordForm').addEventListener('submit', async function (event) {
             event.preventDefault();
