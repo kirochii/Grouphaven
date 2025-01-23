@@ -193,8 +193,8 @@
         document.getElementById('passwordForm').addEventListener('submit', async function (event) {
             event.preventDefault();
 
-            var newPassword = document.getElementById('newPassword').value;
-            var confirmPassword = document.getElementById('confirmPassword').value;
+            var newPassword = String(document.getElementById('newPassword').value);
+            var confirmPassword = String(document.getElementById('confirmPassword').value);
             var errorDiv = document.getElementById('error');
 
             const regex = /^[A-Za-z\d@$!%*?&]{8,15}$/;
@@ -206,6 +206,7 @@
                 errorDiv.textContent = '⚠︎ Passwords do not match';
             } else {
                 errorDiv.textContent = '';
+
                 handleReset();
                 document.getElementById('passwordForm').style.display = 'none';
                 document.getElementById('cardHeader').style.textAlign = 'center';
