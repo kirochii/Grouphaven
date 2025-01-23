@@ -146,16 +146,54 @@
     <script type="module">
         import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
-        const supabaseUrl = 'https://lrryxyalvumuuvefxhrg.supabase.co';
-        const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxycnl4eWFsdnVtdXV2ZWZ4aHJnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzM1NDI1MTUsImV4cCI6MjA0OTExODUxNX0.OPUCbJI_3ufrSJ7dX7PH6XCpL5jj8cn9dv9AwvX4y_c';
+        const supabase = createClient(
+            'https://lrryxyalvumuuvefxhrg.supabase.co',
+            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxycnl4eWFsdnVtdXV2ZWZ4aHJnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzM1NDI1MTUsImV4cCI6MjA0OTExODUxNX0.OPUCbJI_3ufrSJ7dX7PH6XCpL5jj8cn9dv9AwvX4y_c',
+            {
+                auth: {
+                    autoRefreshToken: true,
+                    persistSession: true,
+                    detectSessionInUrl: false,
+                },
+            });
 
-        const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-            auth: {
-                autoRefreshToken: true,
-                persistSession: true,
-                detectSessionInUrl: false,
-            },
-        });
+        async function handleReset() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const accessToken = urlParams.get('access_token');
+
+            if (!accessToken) {
+                console.error("Reset token not found in URL.");
+                return;
+            }
+
+            const { error: sessionError } = await supabase.auth.setSession(accessToken);
+
+            if (signInError) {
+                console.error("Error signing in with reset token:", signInError.message);
+                return;
+            }
+
+            const { data, error } = await supabase.auth.updateUser({
+                password: confirmPassword
+            })
+
+            if (error) {
+                console.error("Error updating user:", error.message);
+
+                const { data, error } = await supabase.auth.exchangeCodeForSession(accessToken);
+
+                const { NewData, NewError } = await supabase.auth.updateUser({
+                    password: confirmPassword
+                })
+
+                if (NewError) {
+                    console.error("Error updating user:", NewError.message);
+                }
+
+            } else {
+                console.log("User updated successfully:", data);
+            }
+        }
 
         document.getElementById('passwordForm').addEventListener('submit', async function (event) {
             event.preventDefault();
@@ -173,17 +211,7 @@
                 errorDiv.textContent = '⚠︎ Passwords do not match';
             } else {
                 errorDiv.textContent = '';
-
-                const { data, error } = await supabase.auth.updateUser({
-                    password: confirmPassword
-                })
-
-                if (error) {
-                    console.error("Error updating user:", error.message);
-                } else {
-                    console.log("User updated successfully:", data);
-                }
-
+                handleReset();
                 document.getElementById('passwordForm').style.display = 'none';
                 document.getElementById('cardHeader').style.textAlign = 'center';
                 document.getElementById('cardHeader').children[0].textContent = "Password successfully changed"
