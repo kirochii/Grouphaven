@@ -65,6 +65,7 @@ export default function ForgotPassword() {
                             value={email}
                             onChangeText={(value) => setEmail(value)}
                             left={<TextInput.Icon icon="email" disabled={true} />}
+                            activeOutlineColor='#32353b'
                         />
                         <View style={styles.errorContainer}>
                             {error ? <Text style={[styles.errorText, { backgroundColor: bgColor }]}>{error}</Text> : null}

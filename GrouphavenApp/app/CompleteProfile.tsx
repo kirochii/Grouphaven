@@ -186,6 +186,7 @@ export default function CompleteProfile() {
                         outlineStyle={styles.inputOutline}
                         value={name}
                         onChangeText={(value) => setName(value)}
+                        activeOutlineColor='#32353b'
                     />
                 );
             case 2:

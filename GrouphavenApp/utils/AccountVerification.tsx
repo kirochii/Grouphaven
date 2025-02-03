@@ -104,3 +104,27 @@ export async function resetPassword(email: string) {
         redirectTo: 'https://grouphaven.netlify.app/recovery',
     })
 }
+
+export async function changeCurrentPassword(password: string) {
+    const { data, error } = await supabase.auth.updateUser({
+        password: password
+    });
+
+    if (error) {
+        return { success: false, message: error.message };
+    }
+
+    return { success: true, data };
+}
+
+export async function changeCurrentEmail(email: string) {
+    const { data, error } = await supabase.auth.updateUser({
+        email: email
+    })
+
+    if (error) {
+        return { success: false, message: error.message };
+    }
+
+    return { success: true, data };
+}
