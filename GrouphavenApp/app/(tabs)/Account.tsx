@@ -1,22 +1,14 @@
-import { StyleSheet, ImageBackground, View, Dimensions } from 'react-native';
-import { Provider as PaperProvider, Text, Button, TextInput } from 'react-native-paper';
+import { StyleSheet, ScrollView, ImageBackground, View, Dimensions } from 'react-native';
+import { Provider as PaperProvider, Text, Button, TextInput, IconButton } from 'react-native-paper';
 import React from 'react';
-import { Link } from 'expo-router';
-
-const { height } = Dimensions.get('window');
+import { router } from 'expo-router';
 
 export default function Account() {
-    const [email, setEmail] = React.useState('');
-    const [password, setPassword] = React.useState('');
-
     return (
         <PaperProvider>
-            <ImageBackground
-                resizeMode="cover"
-                style={styles.background}
-            >
-                <Text>Account</Text>
-            </ImageBackground>
+            <ScrollView style={styles.background}>
+                <IconButton icon="menu" onPress={() => router.push(`../../Settings`)}></IconButton>
+            </ScrollView>
         </PaperProvider>
     );
 }
@@ -24,7 +16,7 @@ export default function Account() {
 const styles = StyleSheet.create({
     background: {
         flex: 1,
-        justifyContent: 'center',
+        backgroundColor: "white",
     },
     container: {
         flex: 1,
