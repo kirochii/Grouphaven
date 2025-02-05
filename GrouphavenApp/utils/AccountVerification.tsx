@@ -1,4 +1,4 @@
-import { supabase } from './supabase';
+import { supabase, supabaseAdmin } from './supabase';
 import * as SecureStore from 'expo-secure-store';
 
 export async function signUpNewUser(inputEmail: string, inputPassword: string) {
@@ -19,7 +19,7 @@ export async function signUpNewUser(inputEmail: string, inputPassword: string) {
 
 export async function signInWithEmail(inputEmail: string, inputPassword: string) {
     const { data, error } = await supabase.auth.signInWithPassword({
-        email: inputEmail,
+        email: inputEmail.trim().toLowerCase(),
         password: inputPassword,
     })
 
@@ -127,4 +127,21 @@ export async function changeCurrentEmail(email: string) {
     }
 
     return { success: true, data };
+}
+
+export async function deleteUser(userId: string) {
+    const { error: deleteError } = await supabase
+        .from('users')
+        .delete()
+        .eq('id', userId);
+    if (deleteError) {
+        return { success: false, message: deleteError.message };
+    }
+
+    const { error: authError } = await supabaseAdmin.auth.admin.deleteUser(userId);
+    if (authError) {
+        return { success: false, message: authError.message };
+    }
+
+    return { success: true };
 }

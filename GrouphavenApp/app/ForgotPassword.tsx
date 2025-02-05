@@ -12,7 +12,7 @@ export default function ForgotPassword() {
     const [countdown, setCountdown] = React.useState(10);
     const [isDisabled, setIsDisabled] = React.useState(false);
     const [bgColor, setBgColor] = React.useState('');
-    const [error, setError] = React.useState(' ');
+    const [error, setError] = React.useState('');
 
     useEffect(() => {
         let timer: ReturnType<typeof setInterval>;

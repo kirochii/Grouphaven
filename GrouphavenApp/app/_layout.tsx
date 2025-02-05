@@ -42,6 +42,7 @@ export default function RootLayout() {
       <Stack.Screen name="Settings" options={{ headerShown: false }} />
       <Stack.Screen name="ChangePassword" options={{ headerShown: false }} />
       <Stack.Screen name="ChangeEmail" options={{ headerShown: false }} />
+      <Stack.Screen name="EditProfile" options={{ headerShown: false }} />
     </Stack>
   );
 }
