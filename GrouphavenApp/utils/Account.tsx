@@ -1,5 +1,6 @@
 import { supabase } from './supabase';
 import * as SecureStore from 'expo-secure-store';
+import { decode } from 'base64-arraybuffer'
 
 export async function addUser(name: string, dob: Date, gender: string | null, city: string | null) {
     const userId = await SecureStore.getItemAsync('userId');
@@ -112,3 +113,51 @@ export function getLocation(value: string): string | null {
     const city = CITIES.find(city => city.value === value);
     return city ? city.label : null;
 }
+
+export async function uploadAvatar(fileUri: string, base64FileData: string) {
+    const fileName = `avatar/${Date.now()}_${fileUri.split('/').pop()}`;
+
+    const { data, error } = await supabase
+        .storage
+        .from('images')
+        .upload(fileName, decode(base64FileData), {
+            contentType: 'image/png',
+        });
+
+
+    if (error || !data) {
+        console.error('Upload failed:', error?.message);
+        return null;
+    }
+
+    const publicUrl = supabase.storage.from('images').getPublicUrl(data.path).data.publicUrl;
+    return publicUrl;
+}
+
+export async function updateAvatar(avatarUrl: string | null) {
+    const { data } = await supabase.auth.getUser();
+
+    const { } = await supabase
+        .from('users')
+        .update({ avatar_url: avatarUrl })
+        .eq('id', data?.user?.id);
+};
+
+export async function updateTagline(tagline: string) {
+    const { data } = await supabase.auth.getUser();
+
+    const { error } = await supabase
+        .from('users')
+        .update({ tagline: tagline })
+        .eq('id', data?.user?.id)
+};
+
+export async function updateBio(bio: string) {
+    const { data } = await supabase.auth.getUser();
+
+    const { error } = await supabase
+        .from('users')
+        .update({ bio: bio })
+        .eq('id', data?.user?.id)
+};
+

@@ -100,7 +100,7 @@ export default function Account() {
                 </View>
 
                 {(user?.tagline || user?.bio) && (<View style={styles.userText}>
-                    {user?.tagline && <Text style={styles.userTag}>{user.tagline}</Text>}
+                    {user?.tagline && <Text style={styles.userTag}>{user?.tagline}</Text>}
                     {user?.bio && <Text style={styles.userBio}>{user?.bio}</Text>}
                 </View>)}
                 <Text style={styles.title}>Photos</Text>
