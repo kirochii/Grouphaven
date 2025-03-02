@@ -1,7 +1,7 @@
 import { StyleSheet, Dimensions, ScrollView, View, RefreshControl, TouchableOpacity, Modal, Image } from 'react-native';
 import { Provider as PaperProvider, Text, IconButton, Avatar, Icon } from 'react-native-paper';
 import React from 'react';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { getUserProfile, calculateAge, getLocation } from '../../utils/Account';
 
 const { width, height } = Dimensions.get("window");
@@ -39,15 +39,17 @@ export default function Account() {
         setIsRefreshing(false);
     };
 
-    React.useEffect(() => {
-        const fetchUser = async () => {
-            const userData = await getUserProfile();
-            if (userData) {
-                setUser(userData);
-            }
-        };
-        fetchUser();
-    }, []);
+    useFocusEffect(
+        React.useCallback(() => {
+            const fetchUser = async () => {
+                const userData = await getUserProfile();
+                if (userData) {
+                    setUser(userData);
+                }
+            };
+            fetchUser();
+        }, [])
+    );
 
     React.useEffect(() => {
         if (user) {

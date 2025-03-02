@@ -143,6 +143,57 @@ export async function updateAvatar(avatarUrl: string | null) {
         .eq('id', data?.user?.id);
 };
 
+export async function uploadImage(fileUri: string, base64FileData: string) {
+    const fileName = `image/${Date.now()}_${fileUri.split('/').pop()}`;
+
+    const { data, error } = await supabase
+        .storage
+        .from('images')
+        .upload(fileName, decode(base64FileData), {
+            contentType: 'image/png',
+        });
+
+
+    if (error || !data) {
+        console.error('Upload failed:', error?.message);
+        return null;
+    }
+
+    const publicUrl = supabase.storage.from('images').getPublicUrl(data.path).data.publicUrl;
+    return publicUrl;
+}
+
+export async function updateImage(imageUrls: (string | null)[]) {
+    try {
+        const { data: userData, error: userError } = await supabase.auth.getUser();
+        if (userError || !userData?.user?.id) {
+            return false;
+        }
+
+        const updatePayload = {
+            photo_1: imageUrls[0] || null,
+            photo_2: imageUrls[1] || null,
+            photo_3: imageUrls[2] || null,
+            photo_4: imageUrls[3] || null,
+            photo_5: imageUrls[4] || null,
+            photo_6: imageUrls[5] || null,
+        };
+
+        const { error } = await supabase
+            .from("users")
+            .update(updatePayload)
+            .eq("id", userData.user.id);
+
+        if (error) {
+            return false;
+        }
+
+        return true;
+    } catch (err) {
+        return false;
+    }
+}
+
 export async function updateTagline(tagline: string) {
     const { data } = await supabase.auth.getUser();
 
@@ -158,6 +209,15 @@ export async function updateBio(bio: string) {
     const { error } = await supabase
         .from('users')
         .update({ bio: bio })
+        .eq('id', data?.user?.id)
+};
+
+export async function updateCity(city: string) {
+    const { data } = await supabase.auth.getUser();
+
+    const { error } = await supabase
+        .from('users')
+        .update({ city: city })
         .eq('id', data?.user?.id)
 };
 
