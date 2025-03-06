@@ -1,5 +1,5 @@
 import { StyleSheet, ScrollView, View, TouchableOpacity, Image, Dimensions, Modal } from 'react-native';
-import { Provider as PaperProvider, Text, IconButton, TextInput, Avatar, Portal, Button, ActivityIndicator } from 'react-native-paper';
+import { Provider as Portal, Dialog, PaperProvider, Text, IconButton, TextInput, Avatar, Button, ActivityIndicator, Icon } from 'react-native-paper';
 import React from 'react';
 import { router } from 'expo-router';
 import { Dropdown } from 'react-native-element-dropdown';
@@ -9,6 +9,10 @@ import { getUserProfile, updateAvatar, uploadAvatar, updateTagline, updateBio, u
 const { width, height } = Dimensions.get("window");
 
 export default function EditProfile() {
+    const [returnVisible, setReturnVisible] = React.useState(false);
+    const showReturnDialog = () => setReturnVisible(true);
+    const hideReturnDialog = () => setReturnVisible(false);
+
     const CITIES = [
         { label: 'Kuala Lumpur', value: 'kuala_lumpur' },
         { label: 'Seberang Jaya', value: 'seberang_jaya' },
@@ -116,6 +120,12 @@ export default function EditProfile() {
         };
         fetchUser();
     }, []);
+
+    React.useEffect(() => {
+        if (selectedImageIndex !== null && !images[selectedImageIndex]?.uri) {
+            pickProfileImage(); // Automatically trigger image picker
+        }
+    }, [selectedImageIndex]);
 
     const pickProfileImage = async () => {
         let result = await ImagePicker.launchImageLibraryAsync({
@@ -239,120 +249,172 @@ export default function EditProfile() {
         <PaperProvider>
             <View style={styles.container}>
                 <View style={styles.header}>
-                    <IconButton icon="arrow-left" iconColor="#32353b" size={25} onPress={() => router.back()}></IconButton>
+                    <IconButton icon="arrow-left" iconColor="#32353b" size={25} onPress={() => {
+                        if (isChanged) {
+                            showReturnDialog();
+                        } else {
+                            router.back();
+                        }
+                    }}></IconButton>
                     <View style={styles.textContainer}>
                         <Text style={styles.headerText}>Edit Profile</Text>
                     </View>
                 </View>
-                <ScrollView style={styles.background}>
+                <ScrollView>
                     <View style={styles.detailContainer}>
-                        <View style={styles.avatarContainer}>
+
+                        <View style={styles.avatarContainerBG}>
                             <TouchableOpacity onPress={() => setAvatarModalVisible(true)}>
                                 {avatar ? (
-                                    <Avatar.Image size={80} source={{ uri: String(avatar) }} style={styles.avatar} />
+                                    <Avatar.Image size={150} source={{ uri: String(avatar) }} style={styles.avatar} />
                                 ) : (
-                                    <Avatar.Icon size={80} icon="account" style={styles.avatar} />
+                                    <Avatar.Icon size={150} icon="account" style={styles.avatar} />
                                 )}
                             </TouchableOpacity>
+                            <View style={styles.flexRow}>
+                                <Icon
+                                    source="pencil-outline"
+                                    color={'#32353b'}
+                                    size={24}
+                                />
+                                <Text style={styles.avatarCaption}>PROFILE PHOTO</Text>
+                            </View>
                         </View>
 
-                        <TextInput
-                            label="Tagline"
-                            value={tagline || ""}
-                            style={styles.input}
-                            mode='outlined'
-                            onChangeText={tagline => (setTagline(tagline), setIsChanged(true))}
-                        />
+                        <View style={styles.padding}>
+                            <TextInput
+                                label="Tagline"
+                                value={tagline || ""}
+                                style={styles.input}
+                                mode='outlined'
+                                activeOutlineColor='#519CFF'
+                                maxLength={50}
+                                onChangeText={tagline => (setTagline(tagline), setIsChanged(true))}
+                            />
+                            <Text style={styles.charCount}>
+                                {tagline?.length}/{50}
+                            </Text>
 
-                        <TextInput
-                            label="Bio"
-                            value={bio || ""}
-                            style={styles.input}
-                            mode='outlined'
-                            onChangeText={bio => (setBio(bio), setIsChanged(true))}
-                        />
+                            <TextInput
+                                label="Bio"
+                                value={bio || ""}
+                                style={[styles.input, { height: 100, textAlignVertical: 'top' }]}
+                                mode='outlined'
+                                multiline={true}
+                                numberOfLines={4}
+                                activeOutlineColor='#519CFF'
+                                maxLength={160}
+                                onChangeText={bio => (setBio(bio), setIsChanged(true))}
+                            />
+                            <Text style={styles.charCount}>
+                                {bio?.length}/{160}
+                            </Text>
 
-                        <Dropdown
-                            style={[styles.dropdown, isFocus && { borderColor: '#519CFF' }]}
-                            placeholderStyle={styles.placeholderStyle}
-                            selectedTextStyle={styles.selectedTextStyle}
-                            data={CITIES}
-                            labelField="label"
-                            valueField="value"
-                            value={city}
-                            onFocus={() => setIsFocus(true)}
-                            onBlur={() => setIsFocus(false)}
-                            onChange={item => {
-                                setCity(item.value);
-                                setIsFocus(false);
-                                setIsChanged(true);
-                            }}
-                        />
+                            <Dropdown
+                                style={[styles.dropdown, isFocus && { borderColor: '#519CFF' }]}
+                                placeholderStyle={styles.placeholderStyle}
+                                selectedTextStyle={styles.selectedTextStyle}
+                                data={CITIES}
+                                labelField="label"
+                                valueField="value"
+                                value={city}
+                                onFocus={() => setIsFocus(true)}
+                                onBlur={() => setIsFocus(false)}
+                                onChange={item => {
+                                    setCity(item.value);
+                                    setIsFocus(false);
+                                    setIsChanged(true);
+                                }}
+                            />
 
-                        <View style={styles.gridContainer}>
-                            {images.map((image, index) => (
-                                <TouchableOpacity
-                                    key={index}
-                                    style={styles.gridItem}
-                                    onPress={() => {
-                                        setSelectedImageIndex(index);
-                                        setModalVisible(true);
-                                    }}
-                                >
-                                    {image.uri ? ( // Accessing `image.uri`
-                                        <Image source={{ uri: image.uri }} style={styles.image} resizeMode="cover" />
-                                    ) : (
-                                        <IconButton icon="plus" size={40} iconColor="#949494" />
-                                    )}
-                                </TouchableOpacity>
-                            ))}
-
-                            <Modal visible={modalVisible} transparent={true} animationType="fade">
-                                <View style={styles.modalContainer}>
+                            <View style={styles.gridContainer}>
+                                {images.map((image, index) => (
                                     <TouchableOpacity
-                                        style={styles.modalBackground}
-                                        onPress={() => setModalVisible(false)}
+                                        key={index}
+                                        style={styles.gridItem}
+                                        onPress={() => {
+                                            setSelectedImageIndex(index);
+                                            setModalVisible(true);
+                                        }}
                                     >
-                                        {selectedImageIndex !== null && images[selectedImageIndex]?.uri && (
-                                            <Image source={{ uri: images[selectedImageIndex].uri }} style={styles.modalImage} resizeMode="contain" />
+                                        {image.uri ? ( // Accessing `image.uri`
+                                            <Image source={{ uri: image.uri }} style={styles.image} resizeMode="cover" />
+                                        ) : (
+                                            <IconButton icon="plus" size={40} iconColor="#949494" />
                                         )}
                                     </TouchableOpacity>
-                                    <View>
-                                        {selectedImageIndex !== null && images[selectedImageIndex]?.uri ? (
-                                            <>
-                                                <Button mode="contained" onPress={pickProfileImage}>Change Image</Button>
-                                                <Button mode="contained" onPress={clearProfileImage}>Clear Image</Button>
-                                            </>
-                                        ) : (
-                                            <Button mode="contained" onPress={pickProfileImage}>Add Image</Button>
-                                        )}
+                                ))}
+
+                                <Modal visible={modalVisible} transparent={true} animationType="fade">
+                                    <View style={styles.modalContainer}>
+                                        <TouchableOpacity
+                                            style={styles.modalBackground}
+                                            onPress={() => setModalVisible(false)}
+                                        >
+                                            <View style={styles.contentContainer}>
+                                                {selectedImageIndex !== null && images[selectedImageIndex]?.uri && (
+                                                    <Image source={{ uri: images[selectedImageIndex].uri }} style={styles.modalImage} resizeMode="contain" />
+                                                )}
+
+                                                {selectedImageIndex !== null && images[selectedImageIndex]?.uri ? (
+                                                    <View style={styles.buttonContainer}>
+                                                        <Button style={styles.modalButton} labelStyle={styles.modalButtonText} mode="contained" onPress={pickProfileImage}>Change Image</Button>
+                                                        <Button style={styles.modalButton} labelStyle={styles.modalButtonText} mode="contained" onPress={clearProfileImage}>Clear Image</Button>
+                                                    </View>
+                                                ) : null}
+                                            </View>
+                                        </TouchableOpacity>
                                     </View>
-                                </View>
-                            </Modal>
+                                </Modal>
+                            </View>
+
+                            <Button style={[styles.button, !isChanged ? styles.disabledContainedButton : null]} labelStyle={styles.buttonText} mode="contained" onPress={saveChanges} disabled={!isChanged || isUploading} rippleColor="rgba(0, 0, 0, 0.2)">Save Changes</Button>
                         </View>
-
-                        <Button mode="contained" onPress={saveChanges} disabled={!isChanged || isUploading}>Save Changes</Button>
-
                     </View>
                 </ScrollView>
+
+                <Dialog visible={returnVisible} onDismiss={hideReturnDialog} style={styles.dialogBox}>
+                    <Dialog.Title style={styles.dialogTitle}>Confirmation</Dialog.Title>
+                    <Dialog.Content>
+                        <Text style={styles.dialogText}>You have unsaved changes. Discard changes?</Text>
+                    </Dialog.Content>
+                    <Dialog.Actions style={styles.dialogButtonContainer}>
+                        <Button labelStyle={styles.cancelText}
+                            onPress={hideReturnDialog}
+                            rippleColor="transparent">Continue Editing</Button>
+                        <Button
+                            style={styles.confirmButton}
+                            rippleColor="transparent"
+                            labelStyle={styles.confirmText}
+                            onPress={() => {
+                                hideReturnDialog();
+                                router.back();
+                            }}>Discard</Button>
+                    </Dialog.Actions>
+                </Dialog>
 
                 <Modal visible={isUploading} transparent={true}>
                     <View style={styles.loadingModal}>
                         <View style={styles.loadingContent}>
                             <ActivityIndicator size="large" color="#519CFF" />
-                            <Text style={styles.loadingText}>Uploading images...</Text>
+                            <Text style={styles.loadingText}>Updating Profile...</Text>
                         </View>
                     </View>
                 </Modal>
 
-                <Portal>
-                    <Modal visible={avatarModalVisible} onDismiss={() => setAvatarModalVisible(false)}>
-                        <View>
-                            <Button mode="contained" onPress={pickImage}>Change Avatar</Button>
-                            <Button mode="contained" onPress={clearAvatar}>Clear Avatar</Button>
-                        </View>
-                    </Modal>
-                </Portal>
+                <Modal visible={avatarModalVisible} transparent={true} animationType="fade" onDismiss={() => setAvatarModalVisible(false)}>
+                    <View style={styles.modalContainer}>
+                        <TouchableOpacity
+                            style={styles.modalBackground}
+                            onPress={() => setAvatarModalVisible(false)}
+                        >
+                            <View style={styles.buttonContainer}>
+                                <Button style={styles.modalButton} labelStyle={styles.modalButtonText} mode="contained" onPress={pickImage}>Change Avatar</Button>
+                                <Button style={styles.modalButton} labelStyle={styles.modalButtonText} mode="contained" onPress={clearAvatar}>Clear Avatar</Button>
+                            </View>
+                        </TouchableOpacity>
+                    </View>
+                </Modal>
 
             </View>
         </PaperProvider>
@@ -364,9 +426,6 @@ const styles = StyleSheet.create({
         flex: 1,
         flexDirection: 'column',
         backgroundColor: "white",
-    },
-    background: {
-        padding: '5%',
     },
     detailContainer: {
         flexDirection: 'column',
@@ -392,21 +451,39 @@ const styles = StyleSheet.create({
     },
     input: {
         backgroundColor: 'white',
+        marginTop: '5%',
+    },
+    padding: {
+        padding: '5%',
     },
     avatar: {
         backgroundColor: "white",
+        marginTop: '10%',
     },
-    avatarContainer: {
-        marginVertical: '10%',
-        width: 90,
-        height: 90,
-        borderRadius: 100,
-        borderWidth: 3,
-        borderColor: "#519CFF",
-        justifyContent: "center",
-        alignItems: "center",
+    avatarContainerBG: {
+        alignItems: 'center',
+        backgroundColor: 'rgba(0,0,0,0.05)',
+        height: '25%',
+        width: '100%',
+    },
+    avatarCaption: {
+        fontFamily: 'Inter-SemiBold',
+        fontSize: 16,
+        color: '#32353b',
+    },
+    flexRow: {
+        marginTop: '5%',
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    charCount: {
+        fontFamily: 'Inter-Regular',
+        fontSize: 12,
+        color: '#949494',
+        textAlign: 'right',
     },
     dropdown: {
+        marginTop: '10%',
         height: 50,
         borderColor: 'gray',
         borderWidth: 1,
@@ -422,6 +499,7 @@ const styles = StyleSheet.create({
         fontSize: 16,
     },
     gridContainer: {
+        marginTop: '10%',
         flexDirection: "row",
         flexWrap: "wrap",
         justifyContent: "flex-start",
@@ -443,37 +521,107 @@ const styles = StyleSheet.create({
     },
     modalContainer: {
         flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
-        backgroundColor: "rgba(0,0,0,0.5)",
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0,0,0,0.5)',
     },
     modalBackground: {
         flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
-        width: "100%",
-        height: "100%",
+        width: '100%',
+        justifyContent: 'center',
+        alignContent: 'center',
+    },
+    contentContainer: {
+        justifyContent: 'center',
+        alignItems: 'center',
     },
     modalImage: {
         width: width * 0.9,
-        height: height,
+        height: '50%',
     },
-
+    buttonContainer: {
+        marginTop: '5%',
+        width: '100%',
+        alignItems: 'center',
+    },
+    modalButton: {
+        marginBottom: '4%',
+        backgroundColor: 'white',
+        borderRadius: 25,
+        width: '90%',
+    },
+    modalButtonText: {
+        fontFamily: 'Inter-Bold',
+        fontSize: 20,
+        color: '#519CFF',
+        paddingVertical: '1%',
+    },
     loadingModal: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: 'rgba(0, 0, 0, 0.5)', // Semi-transparent background
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
     },
     loadingContent: {
         backgroundColor: 'white',
-        padding: 20,
+        paddingVertical: '10%',
+        paddingHorizontal: '20%',
         borderRadius: 10,
         alignItems: 'center',
     },
     loadingText: {
-        marginTop: 10,
+        fontFamily: 'Inter-Bold',
+        marginTop: '15%',
+        fontSize: 20,
+        color: '#519CFF',
+    },
+    button: {
+        marginTop: '10%',
+        marginBottom: '20%',
+        backgroundColor: '#519CFF',
+        borderRadius: 25,
+    },
+    buttonText: {
+        fontFamily: 'Inter-Bold',
+        fontSize: 20,
+        color: 'white',
+        paddingVertical: '1%',
+    },
+    disabledContainedButton: {
+        backgroundColor: 'rgba(0, 0, 0, 0.15)',
+    },
+    dialogBox: {
+        borderRadius: 10,
+        backgroundColor: 'white',
+    },
+    dialogTitle: {
+        fontFamily: 'Inter-Bold',
+        fontSize: 20,
+        color: '#32353b',
+        textAlign: 'center',
+    },
+    dialogText: {
+        fontFamily: 'Inter-SemiBold',
         fontSize: 16,
         color: '#32353b',
+        textAlign: 'center',
+    },
+    dialogButtonContainer: {
+        justifyContent: "space-between",
+    },
+    cancelText: {
+        fontFamily: 'Inter-Medium',
+        fontSize: 16,
+        color: '#949494',
+    },
+    confirmText: {
+        fontFamily: 'Inter-Medium',
+        fontSize: 16,
+        color: 'white',
+    },
+    confirmButton: {
+        backgroundColor: 'red',
+        borderRadius: 5,
+        width: '40%'
     },
 });
