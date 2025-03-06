@@ -56,6 +56,7 @@ export default function SignIn() {
                             value={email}
                             onChangeText={(value) => setEmail(value)}
                             left={<TextInput.Icon icon="email" disabled={true} />}
+                            activeOutlineColor='#32353b'
                         />
 
                         <TextInput
@@ -67,6 +68,7 @@ export default function SignIn() {
                             value={password}
                             onChangeText={(value) => setPassword(value)}
                             left={<TextInput.Icon icon="key" disabled={true} />}
+                            activeOutlineColor='#32353b'
                         />
                         <Link style={styles.forgotText} href="/ForgotPassword">Forgot password?</Link>
                     </View>

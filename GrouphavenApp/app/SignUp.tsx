@@ -75,6 +75,7 @@ export default function SignUp() {
                             onChangeText={(value) => setEmail(value)}
                             left={<TextInput.Icon icon="email" disabled={true} />}
                             error={!!emailError}
+                            activeOutlineColor='#32353b'
                         />
 
                         <TextInput
@@ -87,6 +88,7 @@ export default function SignUp() {
                             onChangeText={(value) => setPassword(value)}
                             left={<TextInput.Icon icon="key" disabled={true} />}
                             error={!!passwordError}
+                            activeOutlineColor='#32353b'
                         />
 
                         <TextInput
@@ -99,6 +101,7 @@ export default function SignUp() {
                             onChangeText={(value) => setConfirmPassword(value)}
                             left={<TextInput.Icon icon="key" disabled={true} />}
                             error={!!confirmPasswordError}
+                            activeOutlineColor='#32353b'
                         />
 
                         <Text style={styles.termText}>

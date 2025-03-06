@@ -12,7 +12,7 @@ export default function ForgotPassword() {
     const [countdown, setCountdown] = React.useState(10);
     const [isDisabled, setIsDisabled] = React.useState(false);
     const [bgColor, setBgColor] = React.useState('');
-    const [error, setError] = React.useState(' ');
+    const [error, setError] = React.useState('');
 
     useEffect(() => {
         let timer: ReturnType<typeof setInterval>;
@@ -65,6 +65,7 @@ export default function ForgotPassword() {
                             value={email}
                             onChangeText={(value) => setEmail(value)}
                             left={<TextInput.Icon icon="email" disabled={true} />}
+                            activeOutlineColor='#32353b'
                         />
                         <View style={styles.errorContainer}>
                             {error ? <Text style={[styles.errorText, { backgroundColor: bgColor }]}>{error}</Text> : null}
