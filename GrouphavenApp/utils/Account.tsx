@@ -221,3 +221,78 @@ export async function updateCity(city: string) {
         .eq('id', data?.user?.id)
 };
 
+export async function uploadVerificationImage(fileUri: string, base64FileData: string) {
+    const fileName = `verification/${Date.now()}_${fileUri.split('/').pop()}`;
+
+    const { data: uploadData, error: uploadError } = await supabase
+        .storage
+        .from('images')
+        .upload(fileName, decode(base64FileData), {
+            contentType: 'image/png',
+        });
+
+
+    if (uploadError || !uploadData) {
+        console.error('Upload failed:', uploadError?.message);
+        return false;
+    }
+
+    const publicUrl = supabase.storage.from('images').getPublicUrl(uploadData.path).data.publicUrl;
+
+    const { data, error: authError } = await supabase.auth.getUser();
+
+    if (authError || !data?.user) {
+        return false;
+    }
+
+    const { error: insertError } = await supabase
+        .from('verification_request')
+        .insert({ id: data.user.id, request_date: new Date().toISOString().split('T')[0], photo_url: publicUrl })
+
+    if (insertError) {
+        console.error('Insert failed:', insertError.message);
+        return false;
+    }
+
+    return true;
+}
+
+export async function checkVerification() {
+    const { data, error: authError } = await supabase.auth.getUser();
+
+    if (authError || !data?.user) {
+        return null;
+    }
+
+    const { data: requests, error: queryError } = await supabase
+        .from('verification_request')
+        .select('request_status')
+        .eq('id', data.user.id)
+
+    if (queryError) {
+        return null;
+    }
+
+    if (requests && requests.length > 0) {
+        const allStatusesValid = requests.every(request => request.request_status != null);
+
+        if (!allStatusesValid) {
+            return null;
+        }
+
+        const statuses = requests.map(request => request.request_status);
+
+        if (statuses.includes('approved')) {
+            return 'approved';
+        }
+        else if (statuses.includes('pending')) {
+            return 'pending';
+        } else if (statuses.includes('rejected')) {
+            return 'rejected';
+        } else {
+            return null;
+        }
+    } else {
+        return null;
+    }
+}
