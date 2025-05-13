@@ -28,8 +28,8 @@ export async function getUserProfile() {
     const { data: userData, error } = await supabase
         .from("users")
         .select(`
-            name, avatar_url, bio, is_verified, dob, tagline,
-            gender, city, photo_1, photo_2, photo_3, photo_4, photo_5, photo_6
+            id, name, avatar_url, bio, is_verified, dob, tagline,
+            gender, city, photo_1, photo_2, photo_3, photo_4, photo_5, photo_6, is_trusted
         `)
         .eq("id", data.user.id)
         .single();
@@ -295,4 +295,81 @@ export async function checkVerification() {
     } else {
         return null;
     }
+}
+
+function subscribeToMatchPreference(userId: string, callback: () => void) {
+    const channel = supabase
+        .channel('realtime:match_preference')
+        .on(
+            'postgres_changes',
+            {
+                event: '*',
+                schema: 'public',
+                table: 'match_preference',
+                filter: `id=eq.${userId}`,
+            },
+            () => {
+                callback();
+            }
+        )
+        .subscribe();
+
+    return channel;
+}
+
+export async function checkMatching(callback?: () => void) {
+    const { data, error: authError } = await supabase.auth.getUser();
+
+    if (authError || !data?.user) {
+        return { result: false, channel: null };
+    }
+
+    const channel = subscribeToMatchPreference(data.user.id, callback || (() => { }));
+
+    const { data: requests, error: queryError } = await supabase
+        .from('match_preference')
+        .select('id')
+        .eq('id', data.user.id)
+        .maybeSingle();
+
+    if (queryError) {
+        return { result: false, channel };
+    }
+
+    return {
+        result: !!requests,
+        channel
+    };
+}
+
+export async function joinQueue(isHost: boolean, sameGender: boolean, minAge: number, maxAge: number, minSize: number, maxSize: number, interests: string[] | null) {
+    const userData = await getUserProfile();
+    const userAge = calculateAge(userData?.dob);
+
+    const { } = await supabase
+        .from('match_preference')
+        .insert({
+            id: userData?.id,
+            user_age: userAge,
+            user_gender: userData?.gender,
+            user_is_trusted: userData?.is_trusted,
+            user_city: userData?.city,
+            user_is_host: isHost,
+            min_age_pref: minAge,
+            max_age_pref: maxAge,
+            same_gender: sameGender,
+            min_group_size: minSize,
+            max_group_size: maxSize,
+            interests: interests,
+        })
+}
+
+export async function leaveQueue() {
+    const { data } = await supabase.auth.getUser();
+
+    const { } = await supabase
+        .from('match_preference')
+        .delete()
+        .eq('id', data.user?.id);
+
 }
