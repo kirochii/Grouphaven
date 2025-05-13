@@ -75,7 +75,7 @@ export default function Settings() {
                             titleStyle={styles.listItem}
                             title="Verify Account"
                             left={() => <List.Icon icon="security" />}
-                            onPress={() => { }}
+                            onPress={() => { router.push(`../VerifyAccount`) }}
                         />
                         <Divider bold={true} style={styles.divider} />
                         <List.Item

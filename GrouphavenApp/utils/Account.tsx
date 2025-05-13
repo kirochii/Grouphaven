@@ -28,8 +28,8 @@ export async function getUserProfile() {
     const { data: userData, error } = await supabase
         .from("users")
         .select(`
-            name, avatar_url, bio, is_verified, dob, tagline,
-            gender, city, photo_1, photo_2, photo_3, photo_4, photo_5, photo_6
+            id, name, avatar_url, bio, is_verified, dob, tagline,
+            gender, city, photo_1, photo_2, photo_3, photo_4, photo_5, photo_6, is_trusted
         `)
         .eq("id", data.user.id)
         .single();
@@ -221,3 +221,155 @@ export async function updateCity(city: string) {
         .eq('id', data?.user?.id)
 };
 
+export async function uploadVerificationImage(fileUri: string, base64FileData: string) {
+    const fileName = `verification/${Date.now()}_${fileUri.split('/').pop()}`;
+
+    const { data: uploadData, error: uploadError } = await supabase
+        .storage
+        .from('images')
+        .upload(fileName, decode(base64FileData), {
+            contentType: 'image/png',
+        });
+
+
+    if (uploadError || !uploadData) {
+        console.error('Upload failed:', uploadError?.message);
+        return false;
+    }
+
+    const publicUrl = supabase.storage.from('images').getPublicUrl(uploadData.path).data.publicUrl;
+
+    const { data, error: authError } = await supabase.auth.getUser();
+
+    if (authError || !data?.user) {
+        return false;
+    }
+
+    const { error: insertError } = await supabase
+        .from('verification_request')
+        .insert({ id: data.user.id, request_date: new Date().toISOString().split('T')[0], photo_url: publicUrl })
+
+    if (insertError) {
+        console.error('Insert failed:', insertError.message);
+        return false;
+    }
+
+    return true;
+}
+
+export async function checkVerification() {
+    const { data, error: authError } = await supabase.auth.getUser();
+
+    if (authError || !data?.user) {
+        return null;
+    }
+
+    const { data: requests, error: queryError } = await supabase
+        .from('verification_request')
+        .select('request_status')
+        .eq('id', data.user.id)
+
+    if (queryError) {
+        return null;
+    }
+
+    if (requests && requests.length > 0) {
+        const allStatusesValid = requests.every(request => request.request_status != null);
+
+        if (!allStatusesValid) {
+            return null;
+        }
+
+        const statuses = requests.map(request => request.request_status);
+
+        if (statuses.includes('approved')) {
+            return 'approved';
+        }
+        else if (statuses.includes('pending')) {
+            return 'pending';
+        } else if (statuses.includes('rejected')) {
+            return 'rejected';
+        } else {
+            return null;
+        }
+    } else {
+        return null;
+    }
+}
+
+function subscribeToMatchPreference(userId: string, callback: () => void) {
+    const channel = supabase
+        .channel('realtime:match_preference')
+        .on(
+            'postgres_changes',
+            {
+                event: '*',
+                schema: 'public',
+                table: 'match_preference',
+                filter: `id=eq.${userId}`,
+            },
+            () => {
+                callback();
+            }
+        )
+        .subscribe();
+
+    return channel;
+}
+
+export async function checkMatching(callback?: () => void) {
+    const { data, error: authError } = await supabase.auth.getUser();
+
+    if (authError || !data?.user) {
+        return { result: false, channel: null };
+    }
+
+    const channel = subscribeToMatchPreference(data.user.id, callback || (() => { }));
+
+    const { data: requests, error: queryError } = await supabase
+        .from('match_preference')
+        .select('id')
+        .eq('id', data.user.id)
+        .maybeSingle();
+
+    if (queryError) {
+        return { result: false, channel };
+    }
+
+    return {
+        result: !!requests,
+        channel
+    };
+}
+
+export async function joinQueue(isHost: boolean, sameGender: boolean, minAge: number, maxAge: number, minSize: number, maxSize: number, interests: string[] | null) {
+    const userData = await getUserProfile();
+    const userAge = calculateAge(userData?.dob);
+
+    const { } = await supabase
+        .from('match_preference')
+        .insert({
+            id: userData?.id,
+            user_age: userAge,
+            user_gender: userData?.gender,
+            user_is_trusted: userData?.is_trusted,
+            user_city: userData?.city,
+            user_is_host: isHost,
+            min_age_pref: minAge,
+            max_age_pref: maxAge,
+            same_gender: sameGender,
+            min_group_size: minSize,
+            max_group_size: maxSize,
+            interests: interests,
+        })
+}
+
+export async function leaveQueue() {
+    const { data } = await supabase.auth.getUser();
+
+    const { } = await supabase
+        .from('match_preference')
+        .delete()
+        .eq('id', data.user?.id);
+
+}
