@@ -65,3 +65,95 @@ export async function checkSession() {
 
     return true;
 }
+
+export async function getUser() {
+    if (!supabase) {
+        return false;
+    }
+
+    const { data, error } = await supabase
+        .from('verification_request')
+        .select('request_id, photo_url, id')
+        .eq('request_status', 'pending')
+        .order('request_date', { ascending: true })
+        .limit(1);
+
+    if (!data || error) {
+        return false;
+    }
+
+    return data;
+}
+
+export async function approveUser(request_id: String, user_id: String) {
+    const today = new Date().toISOString().split('T')[0];
+
+    if (!supabase) {
+        return false;
+    }
+
+    const { data: adminData, error: authError } = await supabase.auth.getUser();
+
+    if (authError || !adminData?.user) {
+        return false;
+    }
+
+    const { error } = await supabase
+        .from('verification_request')
+        .update({
+            request_status: 'approved',
+            verification_date: today,
+            admin_id: adminData.user.id,
+        })
+        .eq('request_id', request_id);
+
+    if (error) {
+        return false;
+    }
+
+    const { error: userError } = await supabase
+        .from('users')
+        .update({
+            is_verified: true,
+        })
+        .eq('id', user_id);
+
+    if (userError) {
+        return false;
+    }
+
+    return true;
+}
+
+export async function rejectUser(request_id: String) {
+    if (!supabase) {
+        return false;
+    }
+
+    const today = new Date().toISOString().split('T')[0];
+
+    if (!supabase) {
+        return false;
+    }
+
+    const { data: adminData, error: authError } = await supabase.auth.getUser();
+
+    if (authError || !adminData?.user) {
+        return false;
+    }
+
+    const { error } = await supabase
+        .from('verification_request')
+        .update({
+            request_status: 'rejected',
+            verification_date: today,
+            admin_id: adminData.user.id,
+        })
+        .eq('request_id', request_id);
+
+    if (error) {
+        return false;
+    }
+
+    return true;
+}
