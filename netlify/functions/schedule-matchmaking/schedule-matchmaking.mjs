@@ -364,7 +364,7 @@ async function insertDB(userGroups) {
 export default async (req) => {
   const userList = await getUsers();
   const treeGroups = hardClustering(userList);
-  const allUserGroups = softClustering(Object.values(treeGroups).flatMap(Object.values));
+  const allUserGroups = softClustering(treeGroups);
   await insertDB(allUserGroups);
   console.log(treeGroups);
   console.log("\nAll User Groups: ", allUserGroups);
