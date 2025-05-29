@@ -2,6 +2,9 @@ import { createClient } from '@supabase/supabase-js'
 
 // Create a single supabase client for interacting with your database
 const supabase = createClient('https://lrryxyalvumuuvefxhrg.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxycnl4eWFsdnVtdXV2ZWZ4aHJnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzM1NDI1MTUsImV4cCI6MjA0OTExODUxNX0.OPUCbJI_3ufrSJ7dX7PH6XCpL5jj8cn9dv9AwvX4y_c')
+const supabaseAdmin = createClient('https://lrryxyalvumuuvefxhrg.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxycnl4eWFsdnVtdXV2ZWZ4aHJnIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTczMzU0MjUxNSwiZXhwIjoyMDQ5MTE4NTE1fQ.k7mN8J2B11ziQnSU8DNQbH798HijEe3wP9G3ZeYHxwI');
+const SENDGRID_API_KEY = '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';
+const FROM_EMAIL = 'hozx-wp22@student.tarc.edu.my';
 
 class User {
   constructor(id, gender, isTrusted, sameGender, age, minAge, maxAge, city, isHost, minGroup, maxGroup, interests) {
@@ -358,6 +361,76 @@ async function insertDB(userGroups) {
       console.error('Error deleting grouped users from match_preference:', deleteError);
     }
 
+    // Step 5: Send email notification
+    for (const user of group.users) {
+      try {
+        // Fetch user email by user ID from Supabase Auth
+        const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.getUserById(user.id);
+        if (authError || !authUser) {
+          console.error(`Error fetching auth user ${user.id}:`, authError);
+          continue;
+        }
+
+        const email = authUser.user.email;
+        if (!email) {
+          console.warn(`No email found for user ID ${user.id}`);
+          continue;
+        }
+
+        await sendEmail(email);
+
+      } catch (err) {
+        console.error(`Error sending email to user ID ${user.id}:`, err);
+      }
+    }
+
+  }
+}
+
+async function sendEmail(TO_EMAIL) {
+  const emailBody = {
+    personalizations: [
+      {
+        to: [{ email: TO_EMAIL }],
+        subject: 'Match Successful!',
+      },
+    ],
+    from: {
+      email: FROM_EMAIL,
+      name: 'Grouphaven'
+    },
+    content: [
+      {
+        type: 'text/plain',
+        value: 'You have been matched into a group! Check it out in the Grouphaven app now!',
+      },
+    ],
+  };
+
+  try {
+    const response = await fetch('https://api.sendgrid.com/v3/mail/send', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${SENDGRID_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(emailBody),
+    });
+
+    if (!response.ok) {
+      const error = await response.text();
+      throw new Error(`SendGrid Error: ${response.status} - ${error}`);
+    }
+
+    return {
+      statusCode: 200,
+      body: 'Email sent successfully!',
+    };
+  } catch (error) {
+    return {
+      statusCode: 500,
+      body: `Error sending email: ${error.message}`,
+    };
   }
 }
 
