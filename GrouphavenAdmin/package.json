@@ -31,6 +31,7 @@
     "expo-system-ui": "~5.0.6",
     "expo-web-browser": "~14.1.6",
     "react": "19.0.0",
+    "react-datepicker": "^8.4.0",
     "react-dom": "19.0.0",
     "react-native": "0.79.2",
     "react-native-gesture-handler": "~2.24.0",
@@ -38,6 +39,7 @@
     "react-native-safe-area-context": "5.4.0",
     "react-native-screens": "~4.10.0",
     "react-native-web": "^0.20.0",
+    "recharts": "^2.15.3",
     "tamagui": "^1.125.8"
   },
   "devDependencies": {
