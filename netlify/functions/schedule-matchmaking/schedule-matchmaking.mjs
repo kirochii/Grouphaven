@@ -325,6 +325,7 @@ async function insertDB(userGroups) {
       .insert({
         name: 'New Group',
         date_created: new Date().toISOString().split('T')[0],
+        interests: group.interests,
       })
       .select('group_id')  // get the inserted group ID
       .single();
@@ -448,3 +449,10 @@ export default async (req) => {
 export const config = {
   schedule: '@hourly',
 }
+
+const userList = await getUsers();
+const treeGroups = hardClustering(userList);
+const allUserGroups = softClustering(treeGroups);
+await insertDB(allUserGroups);
+console.log(treeGroups);
+console.log("\nAll User Groups: ", allUserGroups);

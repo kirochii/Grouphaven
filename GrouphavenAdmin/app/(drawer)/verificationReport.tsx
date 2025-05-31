@@ -1,7 +1,7 @@
-import { Stack } from 'expo-router';
+import { Stack, Link } from 'expo-router';
 import { checkSession } from '../../utils/Account';
-import { XStack, YStack, Text, Input, Button, Checkbox, Label, Select } from 'tamagui';
-import { getVerificationStatsPie, getAdminStatsPie, getVerificationStatsBar } from '../../utils/Functions';
+import { XStack, YStack, Text, Input, Button, Checkbox, Label, Select, Separator, Dialog, Image } from 'tamagui';
+import { getVerificationStatsPie, getAdminStatsPie, getVerificationStatsBar, getVerificationRows } from '../../utils/Functions';
 import React from 'react';
 import { PieChart, Pie, Cell, BarChart, Bar, Brush, XAxis, YAxis, Tooltip, Legend, } from 'recharts';
 import { lightColors } from '@tamagui/themes';
@@ -34,6 +34,10 @@ export default function VerificationReport() {
     const [selectedRange, setSelectedRange] = React.useState('day');
 
     const [resetRequested, setResetRequested] = React.useState(false);
+
+    const [tableData, setTableData] = React.useState<{ id: string; status: string; photo: string; requestBy: string; verifiedBy: string; requestDate: string; verifyDate: string }[]>([]);
+    const [open, setOpen] = React.useState(false);
+    const [selectedPhoto, setSelectedPhoto] = React.useState<string | null>(null);
 
     const COLORS = [
         '#519CFF', // Blue
@@ -120,7 +124,79 @@ export default function VerificationReport() {
         }))
 
         setVerificationData(formatted)
+
+
+        //Set row data
+        const resultRow = await getVerificationRows(
+            startDate,
+            endDate,
+            verifiedFromDate,
+            verifiedToDate,
+            selected
+        );
+
+        const rowFormatted = resultRow.map(
+            ([id, status, photo, requestBy, verifiedBy, requestDate, verifyDate]) => ({
+                id,
+                status,
+                photo,
+                requestBy,
+                verifiedBy,
+                requestDate,
+                verifyDate,
+            })
+        );
+
+        setTableData(rowFormatted)
     };
+
+    const getStatusStyles = (status: string) => {
+        switch (status.toLowerCase()) {
+            case 'rejected':
+                return {
+                    color: 'red',
+                    borderColor: 'red',
+                    backgroundColor: '$red5',
+                    borderWidth: 1,
+                    paddingVertical: 6,
+                    borderRadius: 8,
+                    fontSize: 14,
+                    width: 100
+                };
+            case 'approved':
+                return {
+                    color: '$green9',
+                    backgroundColor: '$green4',
+                    borderColor: '$green9',
+                    borderWidth: 1,
+                    width: 100,
+                    paddingVertical: 6,
+                    borderRadius: 8,
+                    fontSize: 14
+                };
+            case 'pending':
+                return {
+                    color: '#FFA500',
+                    borderColor: '#FFA500',
+                    backgroundColor: '#FFF5E5',
+                    borderWidth: 1,
+                    width: 100,
+                    paddingVertical: 6,
+                    borderRadius: 8,
+                    fontSize: 14
+                };
+            default:
+                return {
+                    color: '$gray10',
+                    backgroundColor: '$gray2',
+                    width: 100,
+                    paddingVertical: 6,
+                    borderRadius: 8,
+                    fontSize: 14
+                };
+        }
+    };
+
 
     React.useEffect(() => {
         if (resetRequested) {
@@ -142,17 +218,6 @@ export default function VerificationReport() {
 
         init();
     }, []);
-
-
-
-
-
-
-
-
-
-
-
 
     return (
         <>
@@ -439,7 +504,116 @@ export default function VerificationReport() {
                         <Text fontSize={20} fontWeight="400" color={lightColors.gray10}>Verification Activity</Text>
                     </YStack>
                 </XStack>
+
+                <XStack paddingTop={50} paddingLeft={100}>
+                    <Text fontSize={32} fontWeight="bold">Records</Text>
+                </XStack>
+
+                <YStack bg="white" w={1800} borderRadius="$3" marginHorizontal={50} marginBottom={50}>
+                    <XStack paddingVertical="$3" ai="center" paddingLeft={50}>
+                        <YStack flex={2}>
+                            <Text fontWeight="bold">Request ID</Text>
+                        </YStack>
+
+                        <YStack flex={1}>
+                            <Text fontWeight="bold">Status</Text>
+                        </YStack>
+
+                        <YStack flex={1}>
+                            <Text fontWeight="bold">Photo</Text>
+                        </YStack>
+
+                        <YStack flex={1}>
+                            <Text fontWeight="bold">Requested by</Text>
+                        </YStack>
+
+                        <YStack flex={1}>
+                            <Text fontWeight="bold">Verified by</Text>
+                        </YStack>
+
+                        <YStack flex={1}>
+                            <Text fontWeight="bold">Request Date</Text>
+                        </YStack>
+
+                        <YStack flex={1}>
+                            <Text fontWeight="bold">Verification Date</Text>
+                        </YStack>
+                    </XStack>
+                    <Separator />
+
+                    {tableData.length === 0 ? (
+                        <Text flex={1} textAlign="center" padding="$3" color={"$gray10"}>
+                            No records found!
+                        </Text>
+                    ) : (
+                        tableData.map((item, i) => (
+
+                            <YStack key={i}>
+                                <XStack paddingVertical="$3" paddingLeft={50} alignItems="center">
+
+                                    <YStack flex={2}>
+                                        <Text fontSize={14}>{item.id}</Text>
+                                    </YStack>
+
+                                    <YStack flex={1} ai="flex-start">
+                                        <Text textAlign='center'
+                                            {...getStatusStyles(item.status)}
+                                        >
+                                            {item.status}
+                                        </Text>
+                                    </YStack>
+
+                                    <YStack flex={1}>
+                                        <Text fontSize={14} color="$blue10" cursor="pointer"
+                                            textDecorationLine="underline"
+                                            w={80}
+                                            onPress={() => {
+                                                setSelectedPhoto(item.photo);
+                                                setOpen(true);
+                                            }}
+                                        >
+                                            View Photo
+                                        </Text>
+                                    </YStack>
+
+                                    <YStack flex={1}>
+                                        <Text fontSize={14}>{item.requestBy}</Text>
+                                    </YStack>
+
+                                    <YStack flex={1}>
+                                        <Text fontSize={14}>{item.verifiedBy}</Text>
+                                    </YStack>
+
+                                    <YStack flex={1}>
+                                        <Text fontSize={14}>{item.requestDate}</Text>
+                                    </YStack>
+
+                                    <YStack flex={1}>
+                                        <Text fontSize={14}>{item.verifyDate}</Text>
+                                    </YStack>
+                                </XStack>
+                                <Separator />
+                            </YStack>
+                        )))}
+
+                </YStack >
             </YStack >
+
+            <Dialog open={open} onOpenChange={setOpen}>
+                <Dialog.Portal>
+                    <Dialog.Overlay />
+                    <Dialog.Content shadowColor="transparent" borderWidth={0} padding={0} width="30%" height="50%" backgroundColor="$backgroundTransparent">
+                        {selectedPhoto && (
+                            <Image
+                                source={{ uri: selectedPhoto }}
+                                width="100%"
+                                height="100%"
+                                resizeMode="contain"
+                            />
+                        )}
+                    </Dialog.Content>
+                </Dialog.Portal>
+            </Dialog>
         </>
     );
 }
