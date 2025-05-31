@@ -151,7 +151,7 @@ export async function getAdminStatsPie(requestFrom: Date | null, requestTo: Date
 
     let query = supabase
         .from('verification_request')
-        .select('admin_id (name)');
+        .select('request_status, admin_id (name)');
 
     // Inside your function
     if (requestFrom) {
@@ -184,6 +184,10 @@ export async function getAdminStatsPie(requestFrom: Date | null, requestTo: Date
     // Count occurrences by admin name
     const countMap = new Map<string, number>();
     for (const row of data) {
+        if (row.request_status?.toLowerCase() === 'pending') {
+            continue;
+        }
+
         const name = (row.admin_id as unknown as { name: string } | null)?.name ?? 'Unknown';
         countMap.set(name, (countMap.get(name) || 0) + 1);
     }
@@ -278,9 +282,75 @@ export async function getVerificationStatsBar(requestFrom: Date | null, requestT
     return result
 }
 
+export async function getVerificationRows(requestFrom: Date | null, requestTo: Date | null, verifyFrom: Date | null, verifyTo: Date | null, status: string[]): Promise<[string, string, string, string, string, string, string][]> {
+    if (!supabase) {
+        return [];
+    }
+
+    const normalizedStatus = status.map(s => s.toLowerCase());
+
+    let query = supabase
+        .from('verification_request')
+        .select(`
+  request_id,
+  request_status,
+  photo_url,
+  request_date,
+  verification_date,
+  users: id (name),
+  admin: admin_id (name)
+`)
+
+
+    if (requestFrom) {
+        query = query.gte('request_date', formatDateToLocalYYYYMMDD(requestFrom));
+    }
+
+    if (requestTo) {
+        query = query.lte('request_date', formatDateToLocalYYYYMMDD(requestTo));
+    }
+
+    if (verifyFrom) {
+        query = query.gte('verification_date', formatDateToLocalYYYYMMDD(verifyFrom));
+    }
+
+    if (verifyTo) {
+        query = query.lte('verification_date', formatDateToLocalYYYYMMDD(verifyTo));
+    }
+
+    if (normalizedStatus.length > 0) {
+        query = query.in('request_status', normalizedStatus);
+    }
+
+    const { data, error } = await query;
+
+    if (error || !data) {
+        console.error("Error fetching verification stats:", error?.message);
+        return [];
+    }
+
+    console.log(data)
+
+    return data.map((item): [string, string, string, string, string, string, string] => [
+        item.request_id,
+        item.request_status.charAt(0).toUpperCase() + item.request_status.slice(1).toLowerCase(),
+        item.photo_url,
+        (item.users as unknown as { name: string })?.name || '',
+        (item.admin as unknown as { name: string })?.name || '',
+        formatDateToDDMMMYYYY(item.request_date),
+        formatDateToDDMMMYYYY(item.verification_date),
+    ]);
+}
+
 function formatDateToLocalYYYYMMDD(date: Date) {
     const year = date.getFullYear();
     const month = (date.getMonth() + 1).toString().padStart(2, '0'); // months are 0-based
     const day = date.getDate().toString().padStart(2, '0');
     return `${year}-${month}-${day}`;
+}
+
+function formatDateToDDMMMYYYY(dateStr: string | null): string {
+    if (!dateStr) return '';
+    const date = new Date(dateStr);
+    return format(date, 'dd MMM yyyy'); // e.g., "31 May 2025"
 }
