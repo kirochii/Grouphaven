@@ -50,6 +50,13 @@ const DrawerLayout = () => {
             onPress={() => router.push('/(drawer)/verificationReport')}
           />
           <DrawerItem
+            label="Matchmaking Report"
+            icon={({ size, color }) => (
+              <Ionicons name="bar-chart-outline" size={size} color={color} />
+            )}
+            onPress={() => router.push('/(drawer)/matchmakingReport')}
+          />
+          <DrawerItem
             label="Sign Out"
             icon={({ size, color }) => (
               <Ionicons name="log-out-outline" size={size} color={color} />

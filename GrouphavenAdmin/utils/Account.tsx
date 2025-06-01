@@ -73,7 +73,12 @@ export async function getUser() {
 
     const { data, error } = await supabase
         .from('verification_request')
-        .select('request_id, photo_url, id')
+        .select(`
+            request_id,
+            photo_url,
+            id,
+            users(*)
+        `)
         .eq('request_status', 'pending')
         .order('request_date', { ascending: true })
         .limit(1);
