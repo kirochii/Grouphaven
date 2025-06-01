@@ -354,3 +354,176 @@ function formatDateToDDMMMYYYY(dateStr: string | null): string {
     const date = new Date(dateStr);
     return format(date, 'dd MMM yyyy'); // e.g., "31 May 2025"
 }
+
+export function calculateAge(dob: string): number {
+    if (!dob) return 0;
+
+    const birthDate = new Date(dob);
+    const today = new Date();
+
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    const dayDiff = today.getDate() - birthDate.getDate();
+
+    // Adjust age if the birth month/day hasn't occurred yet this year
+    if (monthDiff < 0 || (monthDiff === 0 && dayDiff < 0)) {
+        age--;
+    }
+
+    return age;
+}
+
+export async function getMatchStatsLine(createdFrom: Date | null, createdTo: Date | null, range: string): Promise<[string, number, number][]> {
+    if (!supabase) {
+        return [];
+    }
+
+    let query = supabase
+        .from('group')
+        .select(`
+            group_id,
+            date_created,
+            user_group:user_group!inner(group_id)
+        `)
+
+    if (createdFrom) {
+        query = query.gte('date_created', formatDateToLocalYYYYMMDD(createdFrom));
+    }
+
+    if (createdTo) {
+        query = query.lte('date_created', formatDateToLocalYYYYMMDD(createdTo));
+    }
+
+
+    const { data, error } = await query;
+
+    if (error || !data) {
+        console.error("Error fetching matchmaking stats:", error?.message);
+        return [];
+    }
+
+    // Helper to get the formatted date key
+    const getDateKey = (dateStr: string): { key: string; raw: Date } => {
+        const date = new Date(dateStr)
+        if (isNaN(date.getTime())) return { key: 'Invalid', raw: new Date(0) }
+        switch (range.toLowerCase()) {
+            case 'day':
+                return { key: format(date, 'dd-MM-yyyy'), raw: date }
+            case 'month':
+                return { key: format(date, 'MMM-yyyy'), raw: new Date(date.getFullYear(), date.getMonth(), 1) }
+            case 'year':
+                return { key: format(date, 'yyyy'), raw: new Date(date.getFullYear(), 0, 1) }
+            default:
+                return { key: format(date, 'dd-MM-yyyy'), raw: date }
+        }
+    }
+
+    const statsMap = new Map<string, { groupCount: number; userCount: number; rawDate: Date }>();
+
+    for (const row of data) {
+        const createdDate = row.date_created;
+        const userGroup = row.user_group;
+        const userCount = Array.isArray(userGroup) ? userGroup.length : 0;
+
+        const { key, raw } = getDateKey(createdDate);
+
+        if (!statsMap.has(key)) {
+            statsMap.set(key, { groupCount: 1, userCount, rawDate: raw });
+        } else {
+            const current = statsMap.get(key)!;
+            current.groupCount += 1;
+            current.userCount += userCount;
+        }
+    }
+
+    // Sort and return as array of [formattedDateKey, count]
+    return Array.from(statsMap.entries())
+        .sort((a, b) => a[1].rawDate.getTime() - b[1].rawDate.getTime())
+        .map(([key, { groupCount, userCount }]) => [key, groupCount, userCount]);
+
+}
+
+export async function getInterestStats(createdFrom: Date | null, createdTo: Date | null): Promise<[string, number][]> {
+    if (!supabase) {
+        return [];
+    }
+
+    let query = supabase
+        .from('group')
+        .select(`
+            interests
+        `)
+
+    if (createdFrom) {
+        query = query.gte('date_created', formatDateToLocalYYYYMMDD(createdFrom));
+    }
+
+    if (createdTo) {
+        query = query.lte('date_created', formatDateToLocalYYYYMMDD(createdTo));
+    }
+
+
+    const { data, error } = await query;
+
+    if (error || !data) {
+        console.error("Error fetching interests stats:", error?.message);
+        return [];
+    }
+
+    // Count interests
+    const interestCount: Record<string, number> = {};
+
+    for (const row of data) {
+        if (Array.isArray(row.interests)) {
+            for (const interest of row.interests) {
+                interestCount[interest] = (interestCount[interest] || 0) + 1;
+            }
+        }
+    }
+
+    // Convert to array of [interest, count] and sort descending
+    return Object.entries(interestCount).sort((a, b) => b[1] - a[1]);
+
+}
+
+export async function getGroupRows(createdFrom: Date | null, createdTo: Date | null): Promise<[string, string, number, string, string][]> {
+    if (!supabase) {
+        return [];
+    }
+
+    let query = supabase
+        .from('group')
+        .select(`
+            group_id,
+            name,
+            date_created,
+            interests,
+            user_group(count)
+        `)
+
+
+    if (createdFrom) {
+        query = query.gte('date_created', formatDateToLocalYYYYMMDD(createdFrom));
+    }
+
+    if (createdTo) {
+        query = query.lte('date_created', formatDateToLocalYYYYMMDD(createdTo));
+    }
+
+    const { data, error } = await query;
+
+    if (error || !data) {
+        console.error("Error fetching verification stats:", error?.message);
+        return [];
+    }
+
+    return data.map((item): [string, string, number, string, string] => [
+        item.group_id,
+        item.name,
+        item.user_group?.[0]?.count ?? 0,
+        formatDateToDDMMMYYYY(item.date_created),
+        (item.interests ?? [])
+            .map((interest: string) => interest.charAt(0).toUpperCase() + interest.slice(1).toLowerCase())
+            .join(', ')
+    ]);
+}

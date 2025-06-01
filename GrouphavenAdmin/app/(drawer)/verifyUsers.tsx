@@ -1,6 +1,7 @@
 import { approveUser, rejectUser, checkSession, getUser } from '../../utils/Account'
+import { calculateAge } from '../../utils/Functions'
 import React from 'react';
-import { XStack, YStack, Image, Button, Text } from 'tamagui';
+import { XStack, YStack, Image, Button, Text, Tabs, View } from 'tamagui';
 import { Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -9,6 +10,9 @@ export default function VerifyUsers() {
     const [imageUrl, setImageUrl] = React.useState(null);
     const [requestId, setRequestId] = React.useState(null);
     const [userId, setUserId] = React.useState(null);
+    const [userData, setUserData] = React.useState<any>(null);
+    const photoKeys = ['photo_1', 'photo_2', 'photo_3', 'photo_4', 'photo_5', 'photo_6'];
+
 
     React.useEffect(() => {
         const checkAuth = async () => {
@@ -26,16 +30,19 @@ export default function VerifyUsers() {
     const retrieveData = async () => {
         const data = await getUser();
 
-        console.log(data);
-
         if (!data || data.length === 0) {
             setImageUrl(null);
             setRequestId(null);
             setUserId(null);
+            setUserData(null);
         } else {
+            const request = data[0];
+            const user = request.users;
+
             setImageUrl(data[0].photo_url);
             setRequestId(data[0].request_id);
             setUserId(data[0].id);
+            setUserData(user);
         }
     };
 
@@ -70,37 +77,126 @@ export default function VerifyUsers() {
     return (
         <>
             <Stack.Screen options={{ title: 'Verify Users' }} />
+
             <YStack f={1} w="100%" h="100%" bg="white" jc="center" ai="center" gap={50}>
 
                 {imageUrl && requestId ? (
-                    <>
-                        <XStack>
+
+                    <XStack f={1} w="100%" jc="center" ai="center">
+
+                        <YStack f={1} h="100%" w="100%" jc="center" ai="center">
+                            <YStack h="75%" w="50%" jc="center" ai="center" backgroundColor={"white"} borderRadius={8}
+                                style={{
+                                    boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.5)'
+                                }} padding="$5" gap={20} justifyContent='flex-start'>
+
+
+                                <XStack gap={20} w='100%' jc='center'>
+                                    {userData.avatar_url ? (
+                                        <Image
+                                            source={{
+                                                uri: userData.avatar_url,
+                                                width: 150,
+                                                height: 150,
+                                            }}
+                                            borderRadius={100}
+                                            resizeMode="cover"
+                                        />
+                                    ) : <Ionicons name='person-circle-outline' size={138} color="lightgrey"></Ionicons>}
+
+                                    <YStack gap={20} h={"100%"} jc={"center"}>
+                                        <Text fontSize={24} fontWeight="bold">{userData.name} ({calculateAge(userData.dob)})</Text>
+                                        <Text fontSize={24} fontWeight="bold">{userData.gender.charAt(0).toUpperCase() + userData.gender.slice(1)}</Text>
+                                    </YStack>
+                                </XStack>
+
+                                <XStack w='100%' ai='flex-start' paddingLeft={20}>
+                                    <YStack gap={20} w={"20%"}>
+                                        <Text fontWeight="bold">Tagline:</Text>
+                                        <Text fontWeight="bold">Bio:</Text>
+                                        <Text fontWeight="bold">City:</Text>
+                                        <Text fontWeight="bold">Trusted?:</Text>
+                                    </YStack>
+                                    <YStack gap={20}>
+                                        <Text>{userData.tagline}</Text>
+                                        <Text>{userData.bio}</Text>
+                                        <Text>{userData.city.charAt(0).toUpperCase() + userData.city.slice(1)}</Text>
+                                        <Text>{userData.is_trusted ? 'Yes' : 'No'}</Text>
+                                    </YStack>
+                                </XStack>
+
+                                <XStack gap={20} flexWrap="wrap" w={"100%"} jc='center'>
+                                    {photoKeys.map((key, index) => {
+                                        const photoUrl = userData[key];
+
+                                        return (
+                                            <View
+                                                key={index}
+                                                backgroundColor="#f0f0f0"
+                                                borderRadius={8}
+                                                width={120}
+                                                height={120}
+                                                justifyContent="center"
+                                                alignItems="center"
+                                            >
+                                                {photoUrl ? (
+                                                    <Image
+                                                        source={{ uri: photoUrl, width: 120, height: 120 }}
+                                                        borderRadius={8}
+                                                        resizeMode="cover"
+                                                    />
+                                                ) : (
+                                                    <Ionicons name="image-outline" size={80} color="lightgrey" />
+                                                )}
+                                            </View>
+                                        );
+                                    })}
+                                </XStack>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                            </YStack>
+                        </YStack>
+
+                        <YStack f={1} jc="center" ai="center" gap={50}>
                             {imageUrl ? (
                                 <Image
                                     source={{
                                         uri: imageUrl,
-                                        width: 600,
-                                        height: 600,
+                                        width: 500,
+                                        height: 500,
                                     }}
-                                    style={{ borderRadius: 10, borderWidth: 3 }}
+                                    resizeMode="contain"
                                 />
                             ) : null}
-                        </XStack>
-                        <XStack w="100%" gap={50} jc="center" ai="center">
-                            <Button w={300} disabled={status !== 'idle'} style={{ backgroundColor: 'red' }}
-                                onPress={() => {
-                                    handleReject();
-                                }}>
-                                <Text style={{ color: 'white' }}>REJECT</Text>
-                            </Button>
-                            <Button w={300} disabled={status !== 'idle'} style={{ backgroundColor: '#519CFF' }}
-                                onPress={() => {
-                                    handleApprove();
-                                }}>
-                                <Text style={{ color: 'white' }}>APPROVE</Text>
-                            </Button>
-                        </XStack>
-                    </>
+                            <XStack w="100%" gap={50} jc="center" ai="center">
+                                <Button w={300} disabled={status !== 'idle'} style={{ backgroundColor: 'red' }}
+                                    onPress={() => {
+                                        handleReject();
+                                    }}>
+                                    <Text style={{ color: 'white' }}>REJECT</Text>
+                                </Button>
+                                <Button w={300} disabled={status !== 'idle'} style={{ backgroundColor: '#519CFF' }}
+                                    onPress={() => {
+                                        handleApprove();
+                                    }}>
+                                    <Text style={{ color: 'white' }}>APPROVE</Text>
+                                </Button>
+                            </XStack>
+                        </YStack>
+                    </XStack>
+
                 ) : (
                     <>
                         <Ionicons name="checkmark-circle" size={200} color={'#519CFF'} />

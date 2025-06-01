@@ -1,4 +1,4 @@
-import { Stack, Link } from 'expo-router';
+import { Stack } from 'expo-router';
 import { checkSession } from '../../utils/Account';
 import { XStack, YStack, Text, Input, Button, Checkbox, Label, Select, Separator, Dialog, Image } from 'tamagui';
 import { getVerificationStatsPie, getAdminStatsPie, getVerificationStatsBar, getVerificationRows } from '../../utils/Functions';
