@@ -16,6 +16,7 @@
   "license": "MIT",
   "dependencies": {
     "@netlify/functions": "^2.8.2",
-    "@supabase/supabase-js": "^2.47.2"
+    "@supabase/supabase-js": "^2.47.2",
+    "mailgun.js": "^12.0.3"
   }
 }
