@@ -178,6 +178,7 @@ const styles = StyleSheet.create({
         flex: 1,
         flexDirection: 'column',
         backgroundColor: "white",
+        paddingTop: "5%",
     },
     header: {
         height: "5%",
