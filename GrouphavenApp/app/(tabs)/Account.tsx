@@ -153,6 +153,7 @@ const styles = StyleSheet.create({
         padding: '5%',
         flexDirection: 'column',
         backgroundColor: "white",
+        paddingTop: "10%",
     },
     headerContainer: {
         flex: 1,

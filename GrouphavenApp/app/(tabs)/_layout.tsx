@@ -19,7 +19,8 @@ export default function TabLayout() {
     return (
         <Tabs screenOptions={{
             animation: 'fade',
-            tabBarButton: (props) => <Pressable {...props} android_ripple={{ color: 'transparent' }} />,
+            tabBarButton: ({ ref, ...rest }) =>
+                <Pressable {...rest} android_ripple={{ color: 'transparent' }} />,
             tabBarStyle: {
                 backgroundColor: 'white',
                 borderColor: '#519CFF',
