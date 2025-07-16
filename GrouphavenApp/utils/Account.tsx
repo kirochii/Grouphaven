@@ -29,7 +29,7 @@ export async function getUserProfile() {
         .from("users")
         .select(`
             id, name, avatar_url, bio, is_verified, dob, tagline,
-            gender, city, photo_1, photo_2, photo_3, photo_4, photo_5, photo_6, is_trusted
+            gender, city, photo_1, photo_2, photo_3, photo_4, photo_5, photo_6, is_trusted, exp
         `)
         .eq("id", data.user.id)
         .single();

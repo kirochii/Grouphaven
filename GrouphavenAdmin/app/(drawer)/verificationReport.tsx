@@ -197,6 +197,47 @@ export default function VerificationReport() {
         }
     };
 
+    const exportToCSV = () => {
+        if (tableData.length === 0) return;
+
+        // Define the headers
+        const headers = [
+            'Request ID',
+            'Status',
+            'Photo',
+            'Requested by',
+            'Verified by',
+            'Request Date',
+            'Verification Date'
+        ];
+
+        // Create rows by mapping tableData
+        const rows = tableData.map(item => [
+            item.id,
+            item.status,
+            item.photo, // you might want to replace this with a URL or placeholder text
+            item.requestBy,
+            item.verifiedBy,
+            item.requestDate,
+            item.verifyDate
+        ]);
+
+        // Combine headers and rows
+        const csvContent = [headers, ...rows]
+            .map(e => e.join(','))
+            .join('\n');
+
+        // Create a Blob and trigger download
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', 'VerificationReport.csv');
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
 
     React.useEffect(() => {
         if (resetRequested) {
@@ -505,8 +546,10 @@ export default function VerificationReport() {
                     </YStack>
                 </XStack>
 
-                <XStack paddingTop={50} paddingLeft={100}>
+                <XStack paddingTop={50} paddingLeft={100} paddingRight={100} jc={"space-between"}>
                     <Text fontSize={32} fontWeight="bold">Records</Text>
+                    <Button backgroundColor={"#519CFF"} color={"white"} onPress={exportToCSV}>Export CSV</Button>
+
                 </XStack>
 
                 <YStack bg="white" w={1800} borderRadius="$3" marginHorizontal={50} marginBottom={50}>

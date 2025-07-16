@@ -92,6 +92,12 @@ export default function Settings() {
                         />
                         <List.Item
                             titleStyle={styles.listItem}
+                            title="FAQ"
+                            left={() => <List.Icon icon="help-circle-outline" />}
+                            onPress={() => { router.push(`../FAQ`) }}
+                        />
+                        <List.Item
+                            titleStyle={styles.listItem}
                             title="Log Out"
                             left={() => <List.Icon icon="logout" />}
                             onPress={showLogOutDialog}
