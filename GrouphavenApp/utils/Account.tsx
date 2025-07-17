@@ -266,7 +266,7 @@ export async function checkVerification() {
 
     const { data: requests, error: queryError } = await supabase
         .from('verification_request')
-        .select('request_status')
+        .select(`request_status, desc`)
         .eq('id', data.user.id)
 
     if (queryError) {
@@ -288,7 +288,11 @@ export async function checkVerification() {
         else if (statuses.includes('pending')) {
             return 'pending';
         } else if (statuses.includes('rejected')) {
-            return 'rejected';
+            const rejectedRequest = requests.find(req => req.request_status === 'rejected');
+            return {
+                status: 'rejected',
+                desc: rejectedRequest?.desc || null
+            };
         } else {
             return null;
         }
