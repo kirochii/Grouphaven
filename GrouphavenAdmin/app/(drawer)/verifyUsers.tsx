@@ -1,11 +1,12 @@
 import { approveUser, rejectUser, checkSession, getUser } from '../../utils/Account'
 import { calculateAge } from '../../utils/Functions'
 import React from 'react';
-import { XStack, YStack, Image, Button, Text, Tabs, View } from 'tamagui';
+import { XStack, YStack, Image, Button, Text, View, Label, Select, AlertDialog } from 'tamagui';
 import { Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 
 export default function VerifyUsers() {
+    const [reason, setReason] = React.useState('Invalid Photo')
     const [status, setStatus] = React.useState<'idle' | 'submitting'>('idle')
     const [imageUrl, setImageUrl] = React.useState(null);
     const [requestId, setRequestId] = React.useState(null);
@@ -13,6 +14,12 @@ export default function VerifyUsers() {
     const [userData, setUserData] = React.useState<any>(null);
     const photoKeys = ['photo_1', 'photo_2', 'photo_3', 'photo_4', 'photo_5', 'photo_6'];
 
+    const dropdownItems = [
+        { name: 'Invalid Photo' },
+        { name: 'Invalid Pose' },
+        { name: 'Blurry Photo' },
+        { name: 'Fake Photo' },
+    ]
 
     React.useEffect(() => {
         const checkAuth = async () => {
@@ -65,13 +72,14 @@ export default function VerifyUsers() {
 
         if (!requestId) return;
 
-        const data = await rejectUser(requestId);
+        const data = await rejectUser(requestId, reason);
 
         if (data) {
             retrieveData();
         }
 
         setStatus('idle');
+        setReason('Invalid Photo');
     };
 
     return (
@@ -118,8 +126,8 @@ export default function VerifyUsers() {
                                         <Text fontWeight="bold">Trusted?:</Text>
                                     </YStack>
                                     <YStack gap={20}>
-                                        <Text>{userData.tagline}</Text>
-                                        <Text>{userData.bio}</Text>
+                                        <Text numberOfLines={1} w={'40%'}>{userData.tagline}</Text>
+                                        <Text numberOfLines={1} w={'40%'}>{userData.bio}</Text>
                                         <Text>{userData.city.charAt(0).toUpperCase() + userData.city.slice(1)}</Text>
                                         <Text>{userData.is_trusted ? 'Yes' : 'No'}</Text>
                                     </YStack>
@@ -180,13 +188,78 @@ export default function VerifyUsers() {
                                     resizeMode="contain"
                                 />
                             ) : null}
+
                             <XStack w="100%" gap={50} jc="center" ai="center">
-                                <Button w={300} disabled={status !== 'idle'} style={{ backgroundColor: 'red' }}
-                                    onPress={() => {
-                                        handleReject();
-                                    }}>
-                                    <Text style={{ color: 'white' }}>REJECT</Text>
-                                </Button>
+                                <AlertDialog native>
+                                    <AlertDialog.Trigger asChild>
+                                        <Button w={300} disabled={status !== 'idle'} style={{ backgroundColor: 'red' }}>
+                                            <Text style={{ color: 'white' }}>REJECT</Text>
+                                        </Button>
+                                    </AlertDialog.Trigger>
+
+                                    <AlertDialog.Portal>
+                                        <AlertDialog.Overlay
+                                            key="overlay"
+                                            animation="quick"
+                                            opacity={0.5}
+                                            enterStyle={{ opacity: 0 }}
+                                            exitStyle={{ opacity: 0 }}
+                                        />
+                                        <AlertDialog.Content
+                                            key="content"
+                                            animation={'quick'}
+                                            enterStyle={{ opacity: 0 }}
+                                            exitStyle={{ opacity: 0 }}
+                                        >
+                                            <YStack gap="$4">
+                                                <AlertDialog.Title fontWeight="bold" fontSize={24} >Reject Photo</AlertDialog.Title>
+                                                <YStack gap="$4">
+                                                    <XStack gap="$3" justifyContent="flex-end">
+                                                        <Label fontSize={16}>
+                                                            Reason:
+                                                        </Label>
+                                                        <Select value={reason} onValueChange={setReason}>
+                                                            <Select.Trigger width={200} iconAfter={() => <Ionicons name="chevron-down" size={20} color="#333" />}>
+                                                                <Select.Value />
+                                                            </Select.Trigger>
+
+                                                            <Select.Content zIndex={10000}>
+                                                                <Select.Viewport>
+                                                                    <Select.Group>
+                                                                        {dropdownItems.map((item, i) => (
+                                                                            <Select.Item
+                                                                                index={i}
+                                                                                key={item.name}
+                                                                                value={item.name}
+                                                                            >
+                                                                                <Select.ItemText>{item.name}</Select.ItemText>
+                                                                                <Select.ItemIndicator marginLeft="auto">
+                                                                                    <Ionicons name="checkmark-sharp" size={16} />
+                                                                                </Select.ItemIndicator>
+                                                                            </Select.Item>
+                                                                        ))}
+                                                                    </Select.Group>
+                                                                </Select.Viewport>
+                                                            </Select.Content>
+                                                        </Select>
+                                                    </XStack>
+
+                                                    <XStack justifyContent='space-between'>
+                                                        <AlertDialog.Cancel asChild>
+                                                            <Button style={{ backgroundColor: 'red', color: 'white' }}>Cancel</Button>
+                                                        </AlertDialog.Cancel>
+                                                        <AlertDialog.Action asChild>
+                                                            <Button onPress={() => {
+                                                                handleReject();
+                                                            }} style={{ backgroundColor: '#519CFF', color: 'white' }}>Submit</Button>
+                                                        </AlertDialog.Action>
+                                                    </XStack>
+                                                </YStack>
+                                            </YStack>
+                                        </AlertDialog.Content>
+                                    </AlertDialog.Portal>
+                                </AlertDialog>
+
                                 <Button w={300} disabled={status !== 'idle'} style={{ backgroundColor: '#519CFF' }}
                                     onPress={() => {
                                         handleApprove();
@@ -203,6 +276,7 @@ export default function VerifyUsers() {
                         <Text fontSize={32} fontWeight="bold" color={'#519CFF'}>No pending verification requests!</Text>
                     </>
                 )}
+
 
             </YStack>
         </>

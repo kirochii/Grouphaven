@@ -8,6 +8,7 @@ import { uploadVerificationImage, checkVerification } from '../utils/Account';
 export default function VerifyAccount() {
     const [loading, setLoading] = React.useState(true);
     const [verificationStatus, setVerificationStatus] = React.useState<string | null>(null);
+    const [reason, setReason] = React.useState('');
     const [selectedImage, setSelectedImage] = React.useState<string | null>(null);
     const [Image64, setImage64] = React.useState<string | null>(null);
     const [isUploading, setIsUploading] = React.useState(false);
@@ -19,7 +20,15 @@ export default function VerifyAccount() {
 
     const fetchVerificationStatus = async () => {
         const status = await checkVerification();
-        setVerificationStatus(status);
+        if (typeof status === 'string') {
+            setVerificationStatus(status);
+        } else if (status?.status === 'rejected') {
+            setVerificationStatus('rejected');
+            setReason(status.desc || '');
+        } else {
+            setVerificationStatus(null);
+            setReason('');
+        }
         setLoading(false);
     };
 
@@ -88,7 +97,8 @@ export default function VerifyAccount() {
                                     style={styles.image}
                                 />
                                 <Text style={styles.rejectedText}>
-                                    Your verification was rejected. Please upload another selfie with this pose and our moderators will verify it.
+                                    Your verification was rejected. Please upload another selfie with this pose and our moderators will verify it.{"\n\n"}
+                                    Reason: {reason}.
                                 </Text>
                             </View>
                         )}

@@ -29,7 +29,7 @@ export async function getUserProfile() {
         .from("users")
         .select(`
             id, name, avatar_url, bio, is_verified, dob, tagline,
-            gender, city, photo_1, photo_2, photo_3, photo_4, photo_5, photo_6, is_trusted
+            gender, city, photo_1, photo_2, photo_3, photo_4, photo_5, photo_6, is_trusted, exp
         `)
         .eq("id", data.user.id)
         .single();
@@ -266,7 +266,7 @@ export async function checkVerification() {
 
     const { data: requests, error: queryError } = await supabase
         .from('verification_request')
-        .select('request_status')
+        .select(`request_status, desc`)
         .eq('id', data.user.id)
 
     if (queryError) {
@@ -288,7 +288,11 @@ export async function checkVerification() {
         else if (statuses.includes('pending')) {
             return 'pending';
         } else if (statuses.includes('rejected')) {
-            return 'rejected';
+            const rejectedRequest = requests.find(req => req.request_status === 'rejected');
+            return {
+                status: 'rejected',
+                desc: rejectedRequest?.desc || null
+            };
         } else {
             return null;
         }
