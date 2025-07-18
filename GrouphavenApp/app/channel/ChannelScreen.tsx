@@ -93,7 +93,7 @@ export default function ChannelScreen() {
         options={{
           headerTitle: () => (
             <Pressable
-              onPress={() => router.push({ pathname: '/channel/GroupInfo', params: { cid } })}
+              onPress={() => router.push({ pathname: '../channel/GroupInfo', params: { cid } })}
               style={{ width: '120%' }}
             >
               <View style={{ flexDirection: 'row', alignItems: 'center' }}>
@@ -149,7 +149,7 @@ export default function ChannelScreen() {
             <Pressable
               onPress={() => {
                 closeMenu();
-                router.push({ pathname: '/channel/GroupInfo', params: { cid } });
+                router.push({ pathname: '../channel/GroupInfo', params: { cid } });
               }}
               style={styles.dropdownItem}
             >
@@ -159,7 +159,7 @@ export default function ChannelScreen() {
             <Pressable
               onPress={() => {
                 closeMenu();
-                router.push({ pathname: '/channel/GroupMedia', params: { cid } });
+                router.push({ pathname: '../channel/GroupMedia', params: { cid } });
               }}
               style={styles.dropdownItem}
             >
@@ -178,7 +178,7 @@ export default function ChannelScreen() {
             <Pressable
               onPress={() => {
                 closeMenu();
-                router.push({ pathname: '/channel/RateHost', params: { cid } });
+                router.push({ pathname: '../channel/RateHost', params: { cid } });
               }}
               style={styles.dropdownItem}
             >

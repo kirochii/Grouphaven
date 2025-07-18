@@ -180,7 +180,7 @@ export default function GroupInfoScreen() {
               <TouchableOpacity
                 style={styles.member}
                 onPress={() =>
-                  router.push({ pathname: '/channel/UserInfo', params: { userId: item.user_id } })
+                  router.push({ pathname: '../channel/UserInfo', params: { userId: item.user_id } })
                 }
               >
                 <Image
