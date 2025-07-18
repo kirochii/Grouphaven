@@ -1,0 +1,6 @@
+version: 1
+jobs:
+  send-goals:
+    schedule: '0 1 * * *'  # 9AM Malaysia time (UTC+8)
+    endpoint: send-goals
+    method: POST
