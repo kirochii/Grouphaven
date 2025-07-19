@@ -128,6 +128,8 @@ export default function CompleteProfile() {
         router.replace(`../(tabs)/Account`);
     }
 
+
+
     const renderContent = () => {
         switch (step) {
             case 1:

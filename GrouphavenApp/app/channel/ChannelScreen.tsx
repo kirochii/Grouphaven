@@ -14,9 +14,12 @@ import {
   Dimensions,
   StyleSheet,
   Animated,
+  Alert
 } from 'react-native';
 import { useEffect, useState } from 'react';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
+import { supabase } from '@/utils/supabase';
+
 
 
 export default function ChannelScreen() {
@@ -87,6 +90,48 @@ export default function ChannelScreen() {
   const channelName = channel?.data?.name ?? 'Group Chat';
   const avatarUrl = channel?.data?.image;
 
+  const exitGroup = async () => {
+    if (!cid || typeof cid !== 'string') return;
+
+    const confirmed = await new Promise<boolean>((resolve) => {
+      Alert.alert(
+        'Exit Group',
+        'Are you sure you want to leave this group?',
+        [
+          { text: 'Cancel', style: 'cancel', onPress: () => resolve(false) },
+          { text: 'Yes, Exit', style: 'destructive', onPress: () => resolve(true) },
+        ],
+        { cancelable: true }
+      );
+    });
+
+    if (!confirmed) return;
+
+    try {
+      const [type, id] = cid.split(':');
+      const channel = client.channel(type, id);
+      await channel.removeMembers([client.userID!]);
+
+      const { error } = await supabase
+        .from('user_group')
+        .delete()
+        .eq('group_id', id)
+        .eq('id', client.userID!);
+
+      if (error) {
+        console.error('[ExitGroup] Supabase error:', error);
+        Alert.alert('Error', 'Failed to update group membership.');
+        return;
+      }
+
+      Alert.alert('Success', 'You have left the group.');
+      router.replace('/Groups'); // Or navigate to home screen or groups list
+    } catch (err) {
+      console.error('[ExitGroup] Error:', err);
+      Alert.alert('Error', 'Failed to leave the group.');
+    }
+  };  
+
   return (
     <>
       <Stack.Screen
@@ -117,7 +162,7 @@ export default function ChannelScreen() {
                 <Ionicons name="call-outline" size={22} color="black" />
               </Pressable>
               <Pressable onPress={() => {}} style={{ padding: 8 }}>
-                <Ionicons name="videocam-outline" size={22} color="black" />
+                <Ionicons name="notifications-outline" size={22} color="black" />
               </Pressable>
               <Pressable onPress={openMenu} style={{ padding: 8 }}>
                 <MaterialIcons name="more-vert" size={24} color="black" />
@@ -153,7 +198,10 @@ export default function ChannelScreen() {
               }}
               style={styles.dropdownItem}
             >
+            <View style={styles.iconRow}>
+              <Ionicons name="information-circle-outline" size={24} color="#333" style={styles.icon} />
               <Text style={styles.dropdownText}>Group Info</Text>
+            </View>
             </Pressable>
 
             <Pressable
@@ -163,16 +211,10 @@ export default function ChannelScreen() {
               }}
               style={styles.dropdownItem}
             >
-              <Text style={styles.dropdownText}>Shared Media</Text>
-            </Pressable>
-
-            <Pressable
-              onPress={() => {
-                closeMenu();
-              }}
-              style={styles.dropdownItem}
-            >
-              <Text style={styles.dropdownText}>Chat Theme</Text>
+              <View style={styles.iconRow}>
+                <Ionicons name="images-outline" size={24} color="#333" style={styles.icon} />
+                <Text style={styles.dropdownText}>Shared Media</Text>
+              </View>
             </Pressable>
 
             <Pressable
@@ -182,7 +224,22 @@ export default function ChannelScreen() {
               }}
               style={styles.dropdownItem}
             >
-              <Text style={styles.dropdownText}>Rate Host</Text>
+              <View style={styles.iconRow}>
+                <Ionicons name="star-outline" size={24} color="#333" style={styles.icon} />
+                <Text style={styles.dropdownText}>Rate Host</Text>
+              </View>
+            </Pressable>
+
+            <Pressable
+              onPress={() => {
+                closeMenu();
+              }}
+              style={styles.dropdownItem}
+            >
+              <View style={styles.iconRow}>
+                <Ionicons name="exit-outline" size={24} color="#d00" style={styles.icon} />
+                <Text style={[styles.dropdownText, { color: '#d00' }]}>Exit Group</Text>
+              </View>
             </Pressable>
           </Animated.View>
         </View>
@@ -250,5 +307,12 @@ const styles = StyleSheet.create({
   },
   dropdownText: {
     fontSize: 16,
+  },
+  iconRow: {
+  flexDirection: 'row',
+  alignItems: 'center',
+},
+  icon: {
+    marginRight: 10,
   },
 });

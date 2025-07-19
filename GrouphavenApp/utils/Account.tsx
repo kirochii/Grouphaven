@@ -16,6 +16,26 @@ export async function addUser(name: string, dob: Date, gender: string | null, ci
     const { error } = await supabase
         .from('users')
         .insert({ id: userId, name: name, dob: dob, gender: gender, city: city })
+
+    // Edge function to create Stream user and sync with Stream Chat
+    const streamUserResponse = await fetch(`${process.env.EXPO_PUBLIC_SUPABASE_URL}/functions/v1/create-stream-user`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            userId: userId,
+            name: name,
+            avatar_url: '', // You can add the avatar URL if you have it
+        }),
+    });
+
+    if (!streamUserResponse.ok) {
+        const err = await streamUserResponse.json();
+        console.error('[Stream Sync Error]', err);
+        throw new Error(err.error || 'Failed to sync with Stream');
+    }
+
 }
 
 export async function getUserProfile() {

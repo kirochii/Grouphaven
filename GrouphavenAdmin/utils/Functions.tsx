@@ -527,3 +527,48 @@ export async function getGroupRows(createdFrom: Date | null, createdTo: Date | n
             .join(', ')
     ]);
 }
+
+
+export async function getReviewRows(
+  startDate: Date | null,
+  endDate: Date | null
+): Promise<[string, string, string, string, number, string, string][]> {
+
+  if (!supabase) {
+    console.log('Supabase client is not initialized');
+    return [];
+  }
+
+  let query = supabase
+    .from('reviews')
+    .select(`
+      review_id,
+      group_id,
+      rating,
+      review,
+      review_date,
+      reviewer:reviewer_id (name),
+      host:host_id (name)
+    `);
+
+  if (startDate) query = query.gte('review_date', formatDateToLocalYYYYMMDD(startDate));
+  if (endDate) query = query.lte('review_date', formatDateToLocalYYYYMMDD(endDate));
+
+  const { data, error } = await query;
+
+  if (error || !data) {
+    console.error('Error fetching review rows:', error?.message);
+    return [];
+  }
+
+    return data.map((item): [string, string, string, string, number, string, string] => [
+        item.review_id,
+        item.group_id,
+        item.reviewer?.name || '',
+        item.host?.name || '',
+        item.rating,
+        item.review,
+        formatDateToDDMMMYYYY(item.review_date),
+    ]);
+}
+

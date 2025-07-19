@@ -104,15 +104,32 @@ export default function GroupInfoScreen() {
           .map((m) => m.user_id)
           .filter((id): id is string => typeof id === 'string');
 
-        const { data: usersData, error } = await supabase
+        // Fetch user info
+        const { data: usersData, error: userError } = await supabase
           .from('users')
           .select('id, avatar_url, tagline')
           .in('id', userIds);
 
-        if (error) {
-          console.error('Supabase user fetch error:', error);
+        if (userError) {
+          console.error('[GroupInfo] Supabase user fetch error:', userError);
           return;
         }
+
+        // Fetch host info from user_group table
+        const { data: groupData, error: groupError } = await supabase
+          .from('user_group')
+          .select('id, is_host')
+          .eq('group_id', id);
+
+        if (groupError) {
+          console.error('[GroupInfo] Supabase host fetch error:', groupError);
+          return;
+        }
+
+        const hostMap = groupData?.reduce((acc, row) => {
+          acc[row.id] = row.is_host;
+          return acc;
+        }, {} as Record<string, boolean>) || {};
 
         const userMap = usersData?.reduce((acc, user) => {
           acc[user.id] = {
@@ -126,13 +143,14 @@ export default function GroupInfoScreen() {
           ...m,
           avatar_url: m.user_id ? userMap[m.user_id]?.avatar_url || null : null,
           tagline: m.user_id ? userMap[m.user_id]?.tagline || null : null,
+          is_host: m.user_id ? hostMap[m.user_id] || false : false,
         }));
 
         setMembers(enrichedMembers);
         setChannelImage((channel.data as { image?: string })?.image ?? null);
         setChannelName((channel.data as { name?: string })?.name ?? 'Unnamed Group');
       } catch (err) {
-        console.error('Failed to fetch channel members:', err);
+        console.error('[GroupInfo] Failed to fetch channel members:', err);
       } finally {
         setLoading(false);
       }
@@ -188,7 +206,15 @@ export default function GroupInfoScreen() {
                   style={styles.avatar}
                 />
                 <View style={styles.textContainer}>
-                  <Text style={styles.memberName}>{item.user?.name || item.user_id}</Text>
+                  <Text
+                    style={[
+                      styles.memberName,
+                      item.is_host ? { color: '#007bff', fontWeight: 'bold' } : null,
+                    ]}
+                  >
+                    {item.user?.name || item.user_id}
+                    {item.is_host ? ' 👑 Host' : ''}
+                  </Text>
                   {item.tagline ? (
                     <Text style={styles.tagline}>{item.tagline}</Text>
                   ) : null}

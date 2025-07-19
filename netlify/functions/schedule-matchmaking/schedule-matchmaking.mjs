@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 import dotenv from 'dotenv';
 dotenv.config({ path: '../../../netlify/.env' });
+import { createGroupChannel } from '../../../GrouphavenApp/app/chat/CreateGroupChannel.js';
 
 // Create a single supabase client for interacting with your database
 const supabase = createClient('https://lrryxyalvumuuvefxhrg.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxycnl4eWFsdnVtdXV2ZWZ4aHJnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzM1NDI1MTUsImV4cCI6MjA0OTExODUxNX0.OPUCbJI_3ufrSJ7dX7PH6XCpL5jj8cn9dv9AwvX4y_c')
@@ -351,6 +352,13 @@ async function insertDB(userGroups) {
 
     if (userGroupError) {
       console.error('Error inserting user_group links:', userGroupError);
+    }
+
+    // Step 3.5: Create group channel using Stream
+    try{
+      await createGroupChannel(groupData.group_id, groupData.name, group.users);
+    }catch (error) {
+      console.error('Error creating group channel:', error);
     }
 
     // Step 4: Remove users from match_preference
