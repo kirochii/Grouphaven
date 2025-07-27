@@ -7,7 +7,6 @@ import { Provider as PaperProvider } from 'react-native-paper';
 import ChatProvider from './provider/ChatProvider'; // ✅ if you wrapped globally
 
 import 'react-native-url-polyfill/auto';
-import CallProvider from "./provider/CallProvider";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -55,7 +54,7 @@ export default function RootLayout() {
             <Stack.Screen name="EditProfile" options={{ headerShown: false }} />
             <Stack.Screen name="VerifyAccount" options={{ headerShown: false }} />
             <Stack.Screen name="MatchPreference" options={{ headerShown: false }} />
-            <Stack.Screen name="channel/[cid]" options={{ headerShown: false }} />
+            <Stack.Screen name="channel" options={{ headerShown: false }} />
           </Stack>
       </PaperProvider>
     </GestureHandlerRootView>

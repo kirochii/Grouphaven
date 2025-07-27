@@ -5,6 +5,8 @@ import { useLocalSearchParams, router } from 'expo-router';
 import { supabase } from '@/utils/supabase';
 import { calculateAge, getLocation } from '@/utils/Account';
 
+import { Ionicons } from '@expo/vector-icons';
+
 const { width, height } = Dimensions.get("window");
 
 export default function UserProfile() {
@@ -58,6 +60,37 @@ export default function UserProfile() {
     setModalVisible(true);
   };
 
+  const handleRateUser = () => {
+    router.push({ pathname: '/channel/RateUser', params: { userId } });
+  };
+
+  const handleReportUser = () => {
+    router.push({ pathname: '/channel/ReportUser', params: { userId } });
+  };
+
+  const RatingStars = ({ rating }: { rating: number | null }) => {
+    if (rating === null || rating === undefined) {
+      return <Text style={styles.noRatingText}>No ratings</Text>;
+    }
+
+    const fullStars = Math.floor(rating);
+    const hasHalfStar = rating - fullStars >= 0.5;
+    const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
+
+    return (
+      <View style={styles.ratingContainer}>
+        {[...Array(fullStars)].map((_, i) => (
+          <Ionicons key={`full-${i}`} name="star" size={16} color="#FFD700" />
+        ))}
+        {hasHalfStar && <Ionicons name="star-half" size={16} color="#FFD700" />}
+        {[...Array(emptyStars)].map((_, i) => (
+          <Ionicons key={`empty-${i}`} name="star-outline" size={16} color="#FFD700" />
+        ))}
+        <Text style={styles.ratingText}> ({rating.toFixed(1)})</Text>
+      </View>
+    );
+  };
+
   return (
     <PaperProvider>
       <ScrollView
@@ -87,12 +120,16 @@ export default function UserProfile() {
           <IconButton icon="close" onPress={() => router.back()} />
         </View>
 
+       
+
         {(user?.tagline || user?.bio) && (
           <View style={styles.userText}>
             {user?.tagline && <Text style={styles.userTag}>{user.tagline}</Text>}
             {user?.bio && <Text style={styles.userBio}>{user.bio}</Text>}
           </View>
         )}
+
+         {user && <RatingStars rating={user.avg_rating} />}
 
         <Text style={styles.title}>Photos</Text>
         <View style={styles.gridContainer}>
@@ -120,6 +157,18 @@ export default function UserProfile() {
             </TouchableOpacity>
           </View>
         </Modal>
+
+        <View style={styles.buttonList}>
+          <TouchableOpacity style={styles.listItem} onPress={handleRateUser}>
+            <Ionicons name="star-outline" size={18} color="#519CFF" style={styles.listIcon} />
+            <Text style={[styles.listText, { color: '#519CFF' }]}>Rate & Review</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.listItem} onPress={handleReportUser}>
+            <Ionicons name="flag-outline" size={18} color="#ff4d4f" style={styles.listIcon} />
+            <Text style={[styles.listText, { color: '#ff4d4f' }]}>Report User</Text>
+          </TouchableOpacity>
+        </View>
       </ScrollView>
     </PaperProvider>
   );
@@ -218,4 +267,45 @@ const styles = StyleSheet.create({
     width: width * 0.9,
     height: height,
   },
+
+  buttonList: {
+    marginTop: 30,
+    borderTopWidth: 1,
+    borderTopColor: '#eee',
+  },
+
+  listItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+
+  listIcon: {
+    marginRight: 12,
+  },
+
+  listText: {
+    fontSize: 16,
+    fontWeight: '500',
+  },
+
+  ratingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 4,
+  },
+
+  ratingText: {
+    fontSize: 14,
+    color: '#444',
+    marginLeft: 4,
+  },
+
+  noRatingText: {
+    fontSize: 14,
+    color: '#888',
+    marginTop: 4,
+},
 });

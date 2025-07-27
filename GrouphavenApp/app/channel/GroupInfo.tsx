@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity, Alert, TextInput } from 'react-native';
+import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity, Alert, TextInput, Animated } from 'react-native';
 import { Stack, useLocalSearchParams, router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { useChatContext } from 'stream-chat-expo';
@@ -7,7 +7,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { uploadImage } from '@/utils/Account';
 import { supabase } from '@/utils/supabase';
 
-const placeholderImage = 'https://via.placeholder.com/120x120.png?text=Group';
+const placeholderImage = 'https://lrryxyalvumuuvefxhrg.supabase.co/storage/v1/object/public/images/avatar/default-avatar.png';
 
 export default function GroupInfoScreen() {
   const { cid } = useLocalSearchParams();
@@ -16,8 +16,23 @@ export default function GroupInfoScreen() {
   const [members, setMembers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [channelImage, setChannelImage] = useState<string | null>(null);
-  const [channelName, setChannelName] = useState<string>('Unnamed Group');
+  const [channelName, setChannelName] = useState<string>('New Group');
   const [newChannelName, setNewChannelName] = useState<string>('');
+
+  const [isHost, setIsHost] = useState(false);
+  const [editingName, setEditingName] = useState(false);
+
+  const [buttonAnim] = useState(new Animated.Value(0));
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const getCurrentUserId = async () => {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const userId = sessionData?.session?.user?.id || null;
+      setCurrentUserId(userId);
+    };
+    getCurrentUserId();
+  }, []);
 
   const handleChangeGroupAvatar = async () => {
     try {
@@ -44,9 +59,7 @@ export default function GroupInfoScreen() {
       const channel = client.channel(type, id);
 
       await channel.updatePartial({
-        set: {
-          image: newImageUrl,
-        } as any,
+        set: { image: newImageUrl } as any,
       });
 
       setChannelImage(newImageUrl);
@@ -65,15 +78,13 @@ export default function GroupInfoScreen() {
 
     try {
       await channel.updatePartial({
-        set: {
-          name: newChannelName,
-        }as any,
+        set: { name: newChannelName } as any,
       });
 
       const { error } = await supabase
         .from('group')
         .update({ name: newChannelName })
-        .eq('id', id);
+        .eq('group_id', id);
 
       if (error) {
         console.error('Supabase update error:', error);
@@ -104,7 +115,6 @@ export default function GroupInfoScreen() {
           .map((m) => m.user_id)
           .filter((id): id is string => typeof id === 'string');
 
-        // Fetch user info
         const { data: usersData, error: userError } = await supabase
           .from('users')
           .select('id, avatar_url, tagline')
@@ -115,7 +125,6 @@ export default function GroupInfoScreen() {
           return;
         }
 
-        // Fetch host info from user_group table
         const { data: groupData, error: groupError } = await supabase
           .from('user_group')
           .select('id, is_host')
@@ -130,6 +139,9 @@ export default function GroupInfoScreen() {
           acc[row.id] = row.is_host;
           return acc;
         }, {} as Record<string, boolean>) || {};
+
+        const currentUserHostRow = groupData?.find(row => row.id === client.userID);
+        setIsHost(currentUserHostRow?.is_host ?? false);
 
         const userMap = usersData?.reduce((acc, user) => {
           acc[user.id] = {
@@ -159,6 +171,15 @@ export default function GroupInfoScreen() {
     fetchMembers();
   }, [cid]);
 
+  const toggleEditing = (value: boolean) => {
+    setEditingName(value);
+    Animated.timing(buttonAnim, {
+      toValue: value ? 1 : 0,
+      duration: 200,
+      useNativeDriver: false,
+    }).start();
+  };
+
   return (
     <>
       <Stack.Screen options={{ title: 'Group Info' }} />
@@ -172,19 +193,52 @@ export default function GroupInfoScreen() {
           </TouchableOpacity>
         </View>
 
-        <Text style={styles.title}>Group Info</Text>
-        <Text style={styles.subtitle}>Channel ID: {cid}</Text>
-        <Text style={styles.subtitle}>Channel Name: {channelName}</Text>
-
-        <TextInput
-          style={styles.input}
-          placeholder="Edit group name"
-          value={newChannelName}
-          onChangeText={setNewChannelName}
-        />
-        <TouchableOpacity style={styles.button} onPress={handleUpdateGroupName}>
-          <Text style={styles.buttonText}>Save Group Name</Text>
-        </TouchableOpacity>
+        {isHost ? (
+          <>
+            {editingName ? (
+              <>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Edit group name"
+                  value={newChannelName}
+                  onChangeText={setNewChannelName}
+                  autoFocus
+                />
+                <Animated.View style={{ overflow: 'hidden', height: buttonAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [0, 80],
+                }) }}>
+                  <View style={{ flexDirection: 'row', gap: 10, marginTop: 10 }}>
+                    <TouchableOpacity
+                      style={[styles.button, { flex: 1, backgroundColor: '#519CFF' }]}
+                      onPress={() => {
+                        handleUpdateGroupName();
+                        toggleEditing(false);
+                      }}
+                    >
+                      <Text style={styles.buttonText}>Save</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[styles.button, { flex: 1, backgroundColor: '#ccc' }]}
+                      onPress={() => {
+                        setNewChannelName('');
+                        toggleEditing(false);
+                      }}
+                    >
+                      <Text style={[styles.buttonText, { color: '#333' }]}>Cancel</Text>
+                    </TouchableOpacity>
+                  </View>
+                </Animated.View>
+              </>
+            ) : (
+              <TouchableOpacity onLongPress={() => toggleEditing(true)}>
+                <Text style={styles.title}>{channelName}</Text>
+              </TouchableOpacity>
+            )}
+          </>
+        ) : (
+          <Text style={styles.title}>{channelName}</Text>
+        )}
 
         <Text style={styles.subtitle}>Group: {members.length} members</Text>
 
@@ -197,9 +251,13 @@ export default function GroupInfoScreen() {
             renderItem={({ item }) => (
               <TouchableOpacity
                 style={styles.member}
-                onPress={() =>
-                  router.push({ pathname: '../channel/UserInfo', params: { userId: item.user_id } })
-                }
+                onPress={() => {
+                  if (item.user_id !== currentUserId) {
+                    router.push({ pathname: '../channel/UserInfo', params: { userId: item.user_id } });
+                  } else {
+                    router.push('/(tabs)/Account');
+                  }
+                }}
               >
                 <Image
                   source={{ uri: item.avatar_url || placeholderImage }}
@@ -207,10 +265,7 @@ export default function GroupInfoScreen() {
                 />
                 <View style={styles.textContainer}>
                   <Text
-                    style={[
-                      styles.memberName,
-                      item.is_host ? { color: '#007bff', fontWeight: 'bold' } : null,
-                    ]}
+                    style={[styles.memberName, item.is_host ? { color: '#007bff', fontWeight: 'bold' } : null]}
                   >
                     {item.user?.name || item.user_id}
                     {item.is_host ? ' 👑 Host' : ''}

@@ -88,6 +88,38 @@ export default function MatchmakingReport() {
         setTableData(rowFormatted)
     };
 
+    const exportToCSV = () => {
+        if (tableData.length === 0) return;
+
+        // Define the headers
+        const headers = ['Group ID', 'Name', 'Size', 'Date Created', 'Interests'];
+
+        // Create rows by mapping tableData
+        const rows = tableData.map(item => [
+            item.groupId,
+            item.name,
+            item.size,
+            item.date,
+            item.interests
+        ]);
+
+        // Combine headers and rows
+        const csvContent = [headers, ...rows]
+            .map(e => e.join(','))
+            .join('\n');
+
+        // Create a Blob and trigger download
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', 'MatchmakingReport.csv');
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
+
     React.useEffect(() => {
         if (resetRequested) {
             handleApply();
@@ -272,8 +304,9 @@ export default function MatchmakingReport() {
                     </YStack>
                 </XStack>
 
-                <XStack paddingTop={50} paddingLeft={100}>
+                <XStack paddingTop={50} paddingLeft={100} paddingRight={100} jc={"space-between"}>
                     <Text fontSize={32} fontWeight="bold">Records</Text>
+                    <Button backgroundColor={"#519CFF"} color={"white"} onPress={exportToCSV}>Export CSV</Button>
                 </XStack>
 
                 <YStack bg="white" w={1800} borderRadius="$3" marginHorizontal={50} marginBottom={50}>
@@ -333,12 +366,6 @@ export default function MatchmakingReport() {
                                 <Separator />
                             </YStack>
                         )))}
-
-
-
-
-
-
 
                 </YStack >
             </YStack >

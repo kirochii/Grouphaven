@@ -1,5 +1,6 @@
 import { supabase } from './supabase';
-import { format } from 'date-fns'
+import { format, parseISO  } from 'date-fns'
+import Sentiment from 'sentiment';
 
 export async function getRemainingRequest(): Promise<{ progress: number; count: number }> {
     if (!supabase) {
@@ -529,46 +530,334 @@ export async function getGroupRows(createdFrom: Date | null, createdTo: Date | n
 }
 
 
-export async function getReviewRows(
-  startDate: Date | null,
-  endDate: Date | null
-): Promise<[string, string, string, string, number, string, string][]> {
+export async function getUserGroupMembers(groupId: string): Promise<{ id: string; name: string; image: string }[]> {
 
-  if (!supabase) {
-    console.log('Supabase client is not initialized');
+    if (!supabase) {
+        return [];
+    }
+
+  const { data, error } = await supabase
+    .from('user_group')
+    .select(`
+      id,
+      users (
+        name,
+        avatar_url
+      )
+    `)
+    .eq('group_id', groupId);
+
+  if (error || !data) {
+    console.error('Error fetching group members:', error?.message);
     return [];
   }
 
+  return data.map((entry: any) => ({
+    id: entry.user_id,
+    name: entry.users?.name ?? '(no name)',
+    image: entry.users?.avatar_url ?? '',
+  }));
+}
+
+export async function getReviewRows(createdFrom: Date | null, createdTo: Date | null): Promise<[string, string, string, number, string, string][]> {
+
+    if (!supabase) {
+        return [];
+    }
+
+    let query = supabase
+        .from('reviews')
+        .select('*');
+
+    if (createdFrom) {
+        query = query.gte('review_date', formatDateToLocalYYYYMMDD(createdFrom));
+    }
+
+    if (createdTo) {
+        query = query.lte('review_date', formatDateToLocalYYYYMMDD(createdTo));
+    }
+
+    const { data, error } = await query;
+
+    if (error) {
+        console.error('Error fetching review data:', error);
+        return [];
+    }
+
+    if (error || !data) {
+        console.error("Error fetching verification stats:");
+        return [];
+    }
+
+    return data.map((item): [string, string, string, number, string, string] => [
+        item.review_id,
+        item.reviewer_id,
+        item.reviewee_id,
+        item.rating,
+        item.review,
+        item.review_date
+    ]);
+}
+
+export async function getReviewStatsPie(createdFrom: Date | null, createdTo: Date | null): Promise<{ rating: number, count: number }[]> {
+
+    if (!supabase) {
+        return [];
+    }
+
+    let query = supabase
+        .from('reviews')
+        .select('rating');
+
+    if (createdFrom) {
+        query = query.gte('review_date', formatDateToLocalYYYYMMDD(createdFrom));
+    }
+
+    if (createdTo) {
+        query = query.lte('review_date', formatDateToLocalYYYYMMDD(createdTo));
+    }
+
+    const { data, error } = await query;
+
+    if (error) {
+        console.error('Error fetching ratings:', error);
+        return [];
+    }
+
+    if (!data) {
+        return [];
+    }
+
+    // Count occurrences of each rating
+    const ratingCounts: { [key: number]: number } = {};
+
+    for (const item of data) {
+    const rating = item.rating;
+        if (typeof rating === 'number') {
+            ratingCounts[rating] = (ratingCounts[rating] || 0) + 1;
+        }
+    }
+
+    // Convert the count object to array of { rating, count }
+    return Object.entries(ratingCounts).map(([rating, count]) => ({
+    rating: parseInt(rating),
+    count
+    }));
+}
+
+export function getSentimentLabel(text: string): 'Positive' | 'Neutral' | 'Negative' {
+    const result = new Sentiment().analyze(text);
+    const score = result.score;
+
+    if (score > 1) return 'Positive';
+    if (score < -1) return 'Negative';
+    return 'Neutral';
+}
+
+export async function getReviewSentimentStatsPie(createdFrom: Date | null, createdTo: Date | null): Promise<{ sentiment: string, count: number }[]> {
+
+    if (!supabase) {
+        return [];
+    }
+
+    let query = supabase
+        .from('reviews')
+        .select('review');
+
+    if (createdFrom) {
+        query = query.gte('review_date', formatDateToLocalYYYYMMDD(createdFrom));
+    }
+    if (createdTo) {
+        query = query.lte('review_date', formatDateToLocalYYYYMMDD(createdTo));
+    }
+
+    const { data, error } = await query;
+    if (error || !data) return [];
+
+    const sentimentCounter: { [key: string]: number } = {
+        Positive: 0,
+        Neutral: 0,
+        Negative: 0
+    };
+
+    for (const item of data) {
+        const result = new Sentiment().analyze(item.review);
+        const score = result.score;
+        const label = score > 1 ? 'Positive' : score < -1 ? 'Negative' : 'Neutral';
+        sentimentCounter[label]++;
+    }
+
+    return Object.entries(sentimentCounter).map(([sentiment, count]) => ({
+    sentiment,
+    count
+}));
+}
+
+export async function getSentimentRatingMismatch(createdFrom: Date | null, createdTo: Date | null): Promise<{ review_id: string, rating: number, sentiment: string, review: string }[]> {
+
+    if (!supabase) {
+        return [];
+    }
+
+    let query = supabase
+        .from('reviews')
+        .select('review_id, rating, review');
+
+    if (createdFrom) {
+        query = query.gte('review_date', formatDateToLocalYYYYMMDD(createdFrom));
+    }
+    if (createdTo) {
+        query = query.lte('review_date', formatDateToLocalYYYYMMDD(createdTo));
+    }
+
+    const { data, error } = await query;
+    if (error || !data) return [];
+
+    const mismatches: { review_id: string, rating: number, sentiment: string, review: string }[] = [];
+
+    for (const item of data) {
+        const result = new Sentiment().analyze(item.review);
+        const score = result.score;
+        const sentiment = score > 1 ? 'Positive' : score < -1 ? 'Negative' : 'Neutral';
+
+        const rating = item.rating;
+
+        if (
+            (sentiment === 'Positive' && rating <= 2) ||
+            (sentiment === 'Negative' && rating >= 4)
+        ) {
+            mismatches.push({
+            review_id: item.review_id,
+            rating,
+            sentiment,
+            review: item.review
+            });
+        }
+    }
+
+    return mismatches;
+}
+
+export async function getReviewStatsLine( createdFrom: Date | null, createdTo: Date | null ): Promise<{ date: string, avgRating: number }[]> {
+  if (!supabase) return [];
+
   let query = supabase
     .from('reviews')
-    .select(`
-      review_id,
-      group_id,
-      rating,
-      review,
-      review_date,
-      reviewer:reviewer_id (name),
-      host:host_id (name)
-    `);
+    .select('review_date, rating');
 
-  if (startDate) query = query.gte('review_date', formatDateToLocalYYYYMMDD(startDate));
-  if (endDate) query = query.lte('review_date', formatDateToLocalYYYYMMDD(endDate));
+  if (createdFrom) {
+    query = query.gte('review_date', formatDateToLocalYYYYMMDD(createdFrom));
+  }
+
+  if (createdTo) {
+    query = query.lte('review_date', formatDateToLocalYYYYMMDD(createdTo));
+  }
 
   const { data, error } = await query;
 
   if (error || !data) {
-    console.error('Error fetching review rows:', error?.message);
+    console.error('Error fetching line chart review data:', error);
     return [];
   }
 
-    return data.map((item): [string, string, string, string, number, string, string] => [
-        item.review_id,
-        item.group_id,
-        item.reviewer?.name || '',
-        item.host?.name || '',
-        item.rating,
-        item.review,
-        formatDateToDDMMMYYYY(item.review_date),
-    ]);
+  const dateGroups: { [date: string]: number[] } = {};
+
+  for (const item of data) {
+    const date = format(new Date(item.review_date), 'yyyy-MM-dd');
+    if (!dateGroups[date]) {
+      dateGroups[date] = [];
+    }
+    dateGroups[date].push(item.rating);
+  }
+
+  return Object.entries(dateGroups)
+    .sort(([a], [b]) => (a < b ? -1 : 1)) // sort chronologically
+    .map(([date, ratings]) => {
+      const sum = ratings.reduce((acc, val) => acc + val, 0);
+      const avgRating = parseFloat((sum / ratings.length).toFixed(2));
+      return { date, avgRating };
+    });
 }
+
+
+export async function getReportRows(
+  createdFrom: Date | null,
+  createdTo: Date | null,
+  statuses?: string[] // <-- optional
+): Promise<{
+  report_id: string;
+  reported_by: string;
+  reported_user: string;
+  reason: string;
+  screenshot_url: string | null;
+  screenshot_url2: string | null;
+  screenshot_url3: string | null;
+  report_date: string;
+  status: string;
+}[]> {
+  if (!supabase) return [];
+
+  let query = supabase
+    .from('reports')
+    .select('*');
+
+  if (createdFrom) {
+    query = query.gte('report_date', formatDateToLocalYYYYMMDD(createdFrom));
+  }
+
+  if (createdTo) {
+    query = query.lte('report_date', formatDateToLocalYYYYMMDD(createdTo));
+  }
+
+  if (Array.isArray(statuses) && statuses.length > 0) {
+    query = query.in('status', statuses.map(s => s.toUpperCase()));
+  }
+
+  const { data, error } = await query;
+
+  if (error || !data) {
+    console.error('Error fetching report data:', error);
+    return [];
+  }
+
+  return data;
+}
+
+export async function getReportStatusStatsPie( createdFrom: Date | null, createdTo: Date | null ): Promise<{ status: string; count: number }[]> {
+  if (!supabase) return [];
+
+  let query = supabase
+    .from('reports')
+    .select('status');
+
+  if (createdFrom) {
+    query = query.gte('report_date', formatDateToLocalYYYYMMDD(createdFrom));
+  }
+
+  if (createdTo) {
+    query = query.lte('report_date', formatDateToLocalYYYYMMDD(createdTo));
+  }
+
+  const { data, error } = await query;
+
+  if (error || !data) {
+    console.error('Error fetching report status stats:', error);
+    return [];
+  }
+
+  const statusCounts: { [status: string]: number } = {};
+
+  for (const item of data) {
+    const status = item.status?.toUpperCase();
+    if (status) {
+      statusCounts[status] = (statusCounts[status] || 0) + 1;
+    }
+  }
+
+  return Object.entries(statusCounts).map(([status, count]) => ({
+    status,
+    count,
+  }));
+}
+
 

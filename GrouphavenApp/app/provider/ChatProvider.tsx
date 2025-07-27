@@ -61,7 +61,7 @@ export default function ChatProvider({ children }: PropsWithChildren) {
     return () => {
       if (client.userID) {
         console.log('[ChatProvider] Disconnecting Stream user:', client.userID);
-        client.disconnectUser();
+        client.disconnectUser().catch(console.warn);
       }
       setIsReady(false);
     };
@@ -74,7 +74,7 @@ export default function ChatProvider({ children }: PropsWithChildren) {
 
   return (
     <OverlayProvider>
-      <Chat client={client}>{children}</Chat>
+      <Chat client={client}>{children} </Chat>
     </OverlayProvider>
   );
 }

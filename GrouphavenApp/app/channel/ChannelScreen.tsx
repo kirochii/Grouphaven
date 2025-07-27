@@ -19,6 +19,8 @@ import {
 import { useEffect, useState } from 'react';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { supabase } from '@/utils/supabase';
+import { hostGoals } from '@/utils/hostGoals';
+import notifications from './Notification';
 
 
 
@@ -34,6 +36,9 @@ export default function ChannelScreen() {
   const [dropdownAnim] = useState(new Animated.Value(-100));
   const screenWidth = Dimensions.get('window').width;
 
+  const [currentTask, setCurrentTask] = useState<string | null>(null);
+  const [isHost, setIsHost] = useState(false);
+
   useEffect(() => {
     const initChannel = async () => {
       if (!cid || typeof cid !== 'string') {
@@ -46,6 +51,22 @@ export default function ChannelScreen() {
         const selectedChannel = client.channel(type, id);
         await selectedChannel.watch();
         setChannel(selectedChannel);
+
+        // Fetch current_task and is_host from user_group
+        const { data, error } = await supabase
+          .from('user_group')
+          .select('current_task, is_host')
+          .eq('group_id', id)
+          .eq('id', client.userID!)
+          .single();
+
+        if (error) {
+          console.error('[ChannelScreen] Failed to fetch task:', error);
+        } else {
+          setCurrentTask(data.current_task);
+          setIsHost(data.is_host);
+        }
+
       } catch (err: any) {
         setError(err.message || 'Failed to load channel');
       }
@@ -53,6 +74,67 @@ export default function ChannelScreen() {
 
     initChannel();
   }, [cid]);
+
+  const handleCompleteTask = async () => {
+    if (!cid || typeof cid !== 'string') return;
+    const [_, groupId] = cid.split(':');
+
+    try {
+      // ✅ 1. Fetch non-host members
+      const { data: members, error: membersError } = await supabase
+        .from('user_group')
+        .select('id')
+        .eq('group_id', groupId)
+        .neq('id', client.userID!);
+
+      if (membersError) throw membersError;
+
+      // ✅ 2. Create task_verification rows
+      const verificationRows = members.map((m) => ({
+        group_id: groupId,
+        host_id: client.userID!,
+        reviewer_id: m.id,
+        task_desc: currentTask,
+        task_verified: false,
+      }));
+
+      const { error: insertError } = await supabase
+        .from('task_verification')
+        .insert(verificationRows);
+
+      if (insertError) throw insertError;
+
+      // ✅ 3. Clear current task
+      const { error: clearError } = await supabase
+        .from('user_group')
+        .update({ current_task: null })
+        .eq('group_id', groupId)
+        .eq('id', client.userID!);
+
+      if (clearError) throw clearError;
+
+      // ✅ 4. Assign next random task
+      const randomIndex = Math.floor(Math.random() * hostGoals.length);
+      const nextTask = hostGoals[randomIndex];
+
+      const { error: nextTaskError } = await supabase
+        .from('user_group')
+        .update({ current_task: nextTask })
+        .eq('group_id', groupId)
+        .eq('id', client.userID!);
+
+      if (nextTaskError) throw nextTaskError;
+
+      // ✅ 5. Update local state
+      setCurrentTask(nextTask);
+      Alert.alert('Task Submitted', 'A new task has been assigned!');
+    } catch (err) {
+      console.error('[CompleteTask]', err);
+      Alert.alert('Error', 'Could not complete or assign the next task.');
+    }
+  };
+
+
 
   const openMenu = () => {
     setMenuVisible(true);
@@ -161,7 +243,7 @@ export default function ChannelScreen() {
               <Pressable onPress={() => {}} style={{ padding: 8 }}>
                 <Ionicons name="call-outline" size={22} color="black" />
               </Pressable>
-              <Pressable onPress={() => {}} style={{ padding: 8 }}>
+              <Pressable onPress={() => router.push('./Notification')} style={{ padding: 8 }}>
                 <Ionicons name="notifications-outline" size={22} color="black" />
               </Pressable>
               <Pressable onPress={openMenu} style={{ padding: 8 }}>
@@ -172,11 +254,28 @@ export default function ChannelScreen() {
         }}
       />
 
-      {/* Chat Content */}
+    <View style={{ flex: 1 }}>
       <Channel channel={channel}>
-        <MessageList />
-        <MessageInput />
+        <View style={{ flex: 1 }}>
+          <MessageList />
+          <MessageInput />
+        </View>
+
+        {isHost && currentTask && (
+          <View style={styles.taskOverlay}>
+            <View style={styles.taskRow}>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.taskLabel}>Current Task:</Text>
+                <Text style={styles.taskText}>{currentTask}</Text>
+              </View>
+              <Pressable onPress={handleCompleteTask} style={styles.completeButton}>
+                <Ionicons name="checkmark-done" size={22} color="white" />
+              </Pressable>
+            </View>
+          </View>
+        )}
       </Channel>
+    </View>
 
       {/* Dropdown Overlay */}
       {menuVisible && (
@@ -220,13 +319,13 @@ export default function ChannelScreen() {
             <Pressable
               onPress={() => {
                 closeMenu();
-                router.push({ pathname: '../channel/RateHost', params: { cid } });
+                router.push({ pathname: '../channel/RateUser', params: { cid } });
               }}
               style={styles.dropdownItem}
             >
               <View style={styles.iconRow}>
                 <Ionicons name="star-outline" size={24} color="#333" style={styles.icon} />
-                <Text style={styles.dropdownText}>Rate Host</Text>
+                <Text style={styles.dropdownText}>Rate User</Text>
               </View>
             </Pressable>
 
@@ -309,10 +408,46 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   iconRow: {
-  flexDirection: 'row',
-  alignItems: 'center',
-},
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   icon: {
     marginRight: 10,
   },
+
+  taskOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 20,
+    right: 20,
+    backgroundColor: '#f0f4ff',
+    padding: 12,
+    borderRadius: 8,
+    zIndex: 1000,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+  },
+  taskRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  completeButton: {
+    backgroundColor: '#4CAF50',
+    borderRadius: 20,
+    padding: 8,
+    marginLeft: 10,
+  },
+  taskLabel: {
+    fontWeight: 'bold',
+    fontSize: 14,
+    color: '#333',
+  },
+  taskText: {
+    fontSize: 15,
+    color: '#555',
+    marginTop: 2,
+  },
+
 });
