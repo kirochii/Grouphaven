@@ -127,6 +127,20 @@ export default function ChannelAdminPanel() {
         throw new Error(`Suspend failed: ${res.status} ${text}`);
       }
 
+      if (!supabase){
+        return[];
+      }
+      
+          
+      const { error: updateError } = await supabase
+        .from('users')
+        .update({ status: 'banned' })
+        .eq('id', userId);
+
+      if (updateError) {
+        throw new Error(`Failed to update user status: ${updateError.message}`);
+      }
+
       return true;
     } catch (err) {
       console.error(err);

@@ -71,6 +71,13 @@
               onPress={() => router.push('/(drawer)/handleReport')}
             />
             <DrawerItem
+              label="Manage Users"
+              icon={({ size, color }) => (
+                <Ionicons name="body-outline" size={size} color={color} />
+              )}
+              onPress={() => router.push('/(drawer)/manageUsers')}
+            />
+            <DrawerItem
               label="Channel Panel"
               icon={({ size, color }) => (
                 <Ionicons name="chatbox-outline" size={size} color={color} />

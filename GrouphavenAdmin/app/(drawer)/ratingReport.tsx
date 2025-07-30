@@ -478,29 +478,68 @@ export default function ratingReport(){
 
             </YStack>
 
-            <YStack bg="white" w={1800} borderRadius="$3" marginHorizontal={50} marginBottom={50}>
-            <Text fontSize={20} fontWeight="400" marginBottom={10}>Rating-Sentiment Mismatches</Text>
-            {mismatches.length > 0 ? (
-                <YStack>
-                <XStack paddingVertical={5} borderBottomWidth={1} borderColor="$gray6">
-                    <Text width={100} fontWeight="bold">Review ID</Text>
-                    <Text width={60} fontWeight="bold">Rating</Text>
-                    <Text width={100} fontWeight="bold">Sentiment</Text>
-                    <Text flex={1} fontWeight="bold">Review</Text>
-                </XStack>
-                {mismatches.map((item, index) => (
-                    <XStack key={index} paddingVertical={5} borderBottomWidth={1} borderColor="$gray4">
-                    <Text width={100}>{item.review_id}</Text>
-                    <Text width={60}>{item.rating}</Text>
-                    <Text width={100}>{item.sentiment}</Text>
-                    <Text flex={1}>{item.review}</Text>
-                    </XStack>
-                ))}
-                </YStack>
+            <YStack
+            bg="white"
+            w={1800}
+            borderRadius="$3"
+            marginHorizontal={50}
+            marginBottom={50}
+            >
+            <Text fontSize={20} fontWeight="400" marginBottom={10} paddingLeft={50}>
+                Rating–Sentiment Mismatches
+            </Text>
+
+            {sentimentMismatches.length === 0 ? (
+                <Text flex={1} textAlign="center" padding="$3" color="$gray10">
+                No mismatches found
+                </Text>
             ) : (
-                <Text color="$gray10">No mismatches found</Text>
+                <>
+                {/* Table Header */}
+                <XStack paddingVertical="$3" paddingLeft={50} ai="center">
+                    <YStack flex={1}>
+                    <Text fontWeight="bold">Review ID</Text>
+                    </YStack>
+                    <YStack flex={1}>
+                    <Text fontWeight="bold">Rating</Text>
+                    </YStack>
+                    <YStack flex={1}>
+                    <Text fontWeight="bold">Sentiment</Text>
+                    </YStack>
+                    <YStack flex={4}>
+                    <Text fontWeight="bold">Review</Text>
+                    </YStack>
+                </XStack>
+
+                <Separator />
+
+                {/* Table Rows */}
+                {sentimentMismatches.map((item) => (
+                    <YStack key={item.review_id}>
+                    <XStack
+                        paddingVertical="$3"
+                        paddingLeft={50}
+                        alignItems="center"
+                    >
+                        <YStack flex={1}>
+                        <Text fontSize={14}>{item.review_id}</Text>
+                        </YStack>
+                        <YStack flex={1}>
+                        <Text fontSize={14}>{item.rating}</Text>
+                        </YStack>
+                        <YStack flex={1}>
+                        <Text fontSize={14}>{item.sentiment}</Text>
+                        </YStack>
+                        <YStack flex={4}>
+                        <Text fontSize={14}>{item.review}</Text>
+                        </YStack>
+                    </XStack>
+                    <Separator />
+                    </YStack>
+                ))}
+                </>
             )}
-            </YStack>
+</YStack>
 
         </YStack>
     </>

@@ -1,5 +1,5 @@
 import { supabase } from './supabase';
-import { format, parseISO  } from 'date-fns'
+import { format, differenceInYears  } from 'date-fns'
 import Sentiment from 'sentiment';
 
 export async function getRemainingRequest(): Promise<{ progress: number; count: number }> {
@@ -693,50 +693,65 @@ export async function getReviewSentimentStatsPie(createdFrom: Date | null, creat
 }));
 }
 
-export async function getSentimentRatingMismatch(createdFrom: Date | null, createdTo: Date | null): Promise<{ review_id: string, rating: number, sentiment: string, review: string }[]> {
+export async function getSentimentRatingMismatch( createdFrom: Date | null, createdTo: Date | null ): Promise<{ review_id: string, rating: number, sentiment: string, review: string }[]> {
+  
+  if (!supabase) return [];
 
-    if (!supabase) {
-        return [];
-    }
+  let query = supabase
+    .from('reviews')
+    .select('review_id, rating, review');
 
-    let query = supabase
-        .from('reviews')
-        .select('review_id, rating, review');
+  if (createdFrom) {
+    query = query.gte('review_date', formatDateToLocalYYYYMMDD(createdFrom));
+  }
+  if (createdTo) {
+    query = query.lte('review_date', formatDateToLocalYYYYMMDD(createdTo));
+  }
 
-    if (createdFrom) {
-        query = query.gte('review_date', formatDateToLocalYYYYMMDD(createdFrom));
-    }
-    if (createdTo) {
-        query = query.lte('review_date', formatDateToLocalYYYYMMDD(createdTo));
-    }
+  const { data, error } = await query;
+  if (error || !data) return [];
 
-    const { data, error } = await query;
-    if (error || !data) return [];
+  const mismatches: { review_id: string, rating: number, sentiment: string, review: string }[] = [];
 
-    const mismatches: { review_id: string, rating: number, sentiment: string, review: string }[] = [];
+  for (const item of data) {
+    if (!item.review || item.review.trim() === '') continue;
 
-    for (const item of data) {
-        const result = new Sentiment().analyze(item.review);
-        const score = result.score;
-        const sentiment = score > 1 ? 'Positive' : score < -1 ? 'Negative' : 'Neutral';
+    const result = new Sentiment().analyze(item.review);
+    const score = result.score;
+    const sentiment = score >= 1 ? 'Positive' : score <= -1 ? 'Negative' : 'Neutral';
+    const rating = item.rating;
 
-        const rating = item.rating;
-
-        if (
+    console.log({
+        review_id: item.review_id,
+        review: item.review,
+        rating,
+        score,
+        sentiment,
+        mismatch:
             (sentiment === 'Positive' && rating <= 2) ||
-            (sentiment === 'Negative' && rating >= 4)
-        ) {
-            mismatches.push({
-            review_id: item.review_id,
-            rating,
-            sentiment,
-            review: item.review
-            });
-        }
-    }
+            (sentiment === 'Negative' && rating >= 4) ||
+            (sentiment === 'Neutral' && (rating <= 1 || rating >= 5)),
+    });
 
-    return mismatches;
+    const isMismatch =
+      (sentiment === 'Positive' && rating <= 2) ||
+      (sentiment === 'Negative' && rating >= 4) ||
+      (sentiment === 'Neutral' && (rating <= 1 || rating >= 5));
+
+    if (isMismatch) {
+      mismatches.push({
+        review_id: item.review_id,
+        rating,
+        sentiment,
+        review: item.review,
+      });
+    }
+  }
+
+  console.log('Sentiment mismatches:', mismatches.length);
+  return mismatches;
 }
+
 
 export async function getReviewStatsLine( createdFrom: Date | null, createdTo: Date | null ): Promise<{ date: string, avgRating: number }[]> {
   if (!supabase) return [];
@@ -780,21 +795,7 @@ export async function getReviewStatsLine( createdFrom: Date | null, createdTo: D
 }
 
 
-export async function getReportRows(
-  createdFrom: Date | null,
-  createdTo: Date | null,
-  statuses?: string[] // <-- optional
-): Promise<{
-  report_id: string;
-  reported_by: string;
-  reported_user: string;
-  reason: string;
-  screenshot_url: string | null;
-  screenshot_url2: string | null;
-  screenshot_url3: string | null;
-  report_date: string;
-  status: string;
-}[]> {
+export async function getReportRows( createdFrom: Date | null, createdTo: Date | null, statuses?: string[] ): Promise<{ report_id: string; reported_by: string; reported_user: string; reason: string; screenshot_url: string | null; screenshot_url2: string | null; screenshot_url3: string | null; report_date: string; status: string; }[]> {
   if (!supabase) return [];
 
   let query = supabase
@@ -858,6 +859,101 @@ export async function getReportStatusStatsPie( createdFrom: Date | null, created
     status,
     count,
   }));
+}
+
+export async function getUserRow(filters?: {
+  id?: string;
+  name?: string;
+  status?: string;
+  gender?: string;
+  minAge?: number;
+  maxAge?: number;
+  minExp?: number;
+  maxExp?: number;
+  minRating?: number;
+  maxRating?: number;
+}): Promise<
+  {
+    id: string;
+    name: string;
+    avatar_url: string | null;
+    bio: string | null;
+    dob: string | null;
+    gender: string | null;
+    city: string | null;
+    photo_1: string | null;
+    photo_2: string | null;
+    photo_3: string | null;
+    photo_4: string | null;
+    photo_5: string | null;
+    photo_6: string | null;
+    is_verified: boolean;
+    tagline: string | null;
+    is_trusted: boolean;
+    exp: number;
+    avg_rating: number;
+    status: string;
+  }[]
+> {
+  if (!supabase) return [];
+
+  let query = supabase
+    .from('users')
+    .select(`
+      id,
+      name,
+      avatar_url,
+      bio,
+      dob,
+      gender,
+      city,
+      photo_1,
+      photo_2,
+      photo_3,
+      photo_4,
+      photo_5,
+      photo_6,
+      is_verified,
+      tagline,
+      is_trusted,
+      exp,
+      avg_rating,
+      status
+    `);
+
+  if (filters?.id) query = query.eq('id', filters.id);
+  if (filters?.name) query = query.ilike('name', `%${filters.name}%`);
+  if (filters?.status) query = query.eq('status', filters.status);
+  if (filters?.gender) query = query.eq('gender', filters.gender);
+
+  if (filters?.minExp !== undefined) query = query.gte('exp', filters.minExp);
+  if (filters?.maxExp !== undefined) query = query.lte('exp', filters.maxExp);
+
+  if (filters?.minRating !== undefined) query = query.gte('avg_rating', filters.minRating);
+  if (filters?.maxRating !== undefined) query = query.lte('avg_rating', filters.maxRating);
+
+  const { data, error } = await query;
+
+  if (error) {
+    console.error('Error fetching user data:', error);
+    return [];
+  }
+
+  if (!data) return [];
+
+  // Filter by age range (calculated from dob)
+  const filtered = data.filter((user) => {
+    if (!user.dob) return false;
+
+    const age = differenceInYears(new Date(), new Date(user.dob));
+
+    if (filters?.minAge !== undefined && age < filters.minAge) return false;
+    if (filters?.maxAge !== undefined && age > filters.maxAge) return false;
+
+    return true;
+  });
+
+  return filtered;
 }
 
 
