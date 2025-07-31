@@ -29,7 +29,7 @@ export async function getUserProfile() {
         .from("users")
         .select(`
             id, name, avatar_url, bio, is_verified, dob, tagline,
-            gender, city, photo_1, photo_2, photo_3, photo_4, photo_5, photo_6, is_trusted, exp
+            gender, city, photo_1, photo_2, photo_3, photo_4, photo_5, photo_6, is_trusted, exp, avg_rating
         `)
         .eq("id", data.user.id)
         .single();
@@ -376,4 +376,33 @@ export async function leaveQueue() {
         .delete()
         .eq('id', data.user?.id);
 
+}
+
+export async function getReviews() {
+    const { data: user, error: userError } = await supabase.auth.getUser();
+
+    if (userError || !user.user) {
+        console.error('User not logged in or error fetching user', userError);
+        return { reviews: [], count: 0 };
+    }
+
+    const userId = user.user.id;
+
+    const { data, error, count } = await supabase
+        .from('reviews')
+        .select(`
+            *,
+            users:reviewer_id ( name )
+        `, { count: 'exact' })
+        .eq('reviewee_id', userId);
+
+    if (error) {
+        console.error('Error fetching reviews:', error);
+        return { reviews: [], count: 0 };
+    }
+
+    return {
+        reviews: data,
+        count: count ?? 0
+    };
 }
