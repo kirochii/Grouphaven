@@ -1,13 +1,14 @@
 import { createClient } from '@supabase/supabase-js'
 import dotenv from 'dotenv';
+import FormData from "form-data";
+import Mailgun from "mailgun.js";
 dotenv.config({ path: '../../../netlify/.env' });
 import { createGroupChannel } from '../../../GrouphavenApp/app/chat/CreateGroupChannel.js';
 
 // Create a single supabase client for interacting with your database
 const supabase = createClient('https://lrryxyalvumuuvefxhrg.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxycnl4eWFsdnVtdXV2ZWZ4aHJnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzM1NDI1MTUsImV4cCI6MjA0OTExODUxNX0.OPUCbJI_3ufrSJ7dX7PH6XCpL5jj8cn9dv9AwvX4y_c')
 const supabaseAdmin = createClient('https://lrryxyalvumuuvefxhrg.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxycnl4eWFsdnVtdXV2ZWZ4aHJnIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTczMzU0MjUxNSwiZXhwIjoyMDQ5MTE4NTE1fQ.k7mN8J2B11ziQnSU8DNQbH798HijEe3wP9G3ZeYHxwI');
-const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY;
-const FROM_EMAIL = 'hozx-wp22@student.tarc.edu.my';
+const MAILGUN_API_KEY = process.env.MAILGUN_API_KEY;
 
 class User {
   constructor(id, gender, isTrusted, sameGender, age, minAge, maxAge, city, isHost, minGroup, maxGroup, interests) {
@@ -355,9 +356,9 @@ async function insertDB(userGroups) {
     }
 
     // Step 3.5: Create group channel using Stream
-    try{
+    try {
       await createGroupChannel(groupData.group_id, groupData.name, group.users);
-    }catch (error) {
+    } catch (error) {
       console.error('Error creating group channel:', error);
     }
 
@@ -399,49 +400,21 @@ async function insertDB(userGroups) {
 }
 
 async function sendEmail(TO_EMAIL) {
-  const emailBody = {
-    personalizations: [
-      {
-        to: [{ email: TO_EMAIL }],
-        subject: 'Match Successful!',
-      },
-    ],
-    from: {
-      email: FROM_EMAIL,
-      name: 'Grouphaven'
-    },
-    content: [
-      {
-        type: 'text/plain',
-        value: 'You have been matched into a group! Check it out in the Grouphaven app now!',
-      },
-    ],
-  };
+  const mailgun = new Mailgun(FormData);
+  const mg = mailgun.client({
+    username: "api",
+    key: MAILGUN_API_KEY,
+  });
 
   try {
-    const response = await fetch('https://api.sendgrid.com/v3/mail/send', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${SENDGRID_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(emailBody),
+    const data = await mg.messages.create("sandbox56f0a500b39045c1bb8e1e91ede37dac.mailgun.org", {
+      from: "Grouphaven <grouphaven@sandbox56f0a500b39045c1bb8e1e91ede37dac.mailgun.org>",
+      to: [TO_EMAIL],
+      subject: "Match Successful!",
+      text: "You have been matched into a group! Check it out in the Grouphaven app now!",
     });
-
-    if (!response.ok) {
-      const error = await response.text();
-      throw new Error(`SendGrid Error: ${response.status} - ${error}`);
-    }
-
-    return {
-      statusCode: 200,
-      body: 'Email sent successfully!',
-    };
   } catch (error) {
-    return {
-      statusCode: 500,
-      body: `Error sending email: ${error.message}`,
-    };
+    console.log(error);
   }
 }
 

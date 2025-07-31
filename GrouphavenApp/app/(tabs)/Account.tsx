@@ -1,5 +1,5 @@
 import { StyleSheet, Dimensions, ScrollView, View, RefreshControl, TouchableOpacity, Modal, Image } from 'react-native';
-import { Provider as PaperProvider, Text, IconButton, Avatar, Icon } from 'react-native-paper';
+import { Provider as PaperProvider, Text, IconButton, Avatar, Icon, Surface, ProgressBar } from 'react-native-paper';
 import React from 'react';
 import { router, useFocusEffect } from 'expo-router';
 import { getUserProfile, calculateAge, getLocation } from '../../utils/Account';
@@ -51,6 +51,13 @@ export default function Account() {
         }, [])
     );
 
+    const calculateProgress = (currentValue: number, maxValue = 500) => {
+        if (typeof currentValue !== 'number' || isNaN(currentValue)) {
+            currentValue = 0;
+        }
+        return Math.min(currentValue / maxValue, 1);
+    };
+
     React.useEffect(() => {
         if (user) {
             setAge(calculateAge(user.dob));
@@ -88,7 +95,17 @@ export default function Account() {
                                     size={20}
                                 />
                             </View>
-                            <View style={styles.userContainer}>
+                            <TouchableOpacity onPress={() => router.push(`../../Reviews`)}>
+                                <View style={styles.userContainer}>
+                                    <Text style={styles.userLocation}>{user?.avg_rating}</Text>
+                                    <Icon
+                                        source="star"
+                                        color="orange"
+                                        size={20}
+                                    />
+                                </View>
+                            </TouchableOpacity>
+                            <View style={[styles.userContainer, { marginLeft: -5 }]}>
                                 <Icon
                                     source="map-marker"
                                     color={"#949494"}
@@ -105,6 +122,17 @@ export default function Account() {
                     {user?.tagline && <Text style={styles.userTag}>{user?.tagline}</Text>}
                     {user?.bio && <Text style={styles.userBio}>{user?.bio}</Text>}
                 </View>)}
+
+                <Surface mode='flat' style={styles.surface}>
+                    <Text style={styles.trustTitle}>Trust Level: {calculateProgress(user?.exp ?? 0) * 100}%</Text>
+                    <ProgressBar progress={calculateProgress(user?.exp)} color={"white"} style={styles.trustBar} />
+                    {user?.exp >= 500 ? (
+                        <Text style={styles.trustText}>You are now a trusted user!</Text>
+                    ) : (
+                        <Text style={styles.trustText}>Increase your trust level by completing group tasks as host.</Text>
+                    )}
+                </Surface>
+
                 <Text style={styles.title}>Photos</Text>
 
                 <View style={styles.gridContainer}>
@@ -153,6 +181,7 @@ const styles = StyleSheet.create({
         padding: '5%',
         flexDirection: 'column',
         backgroundColor: "white",
+        paddingTop: "10%",
     },
     headerContainer: {
         flex: 1,
@@ -248,4 +277,26 @@ const styles = StyleSheet.create({
         width: width * 0.9,
         height: height,
     },
+    surface: {
+        backgroundColor: "#519CFF",
+        borderRadius: 8,
+        padding: "5%",
+    },
+    trustTitle: {
+        fontFamily: 'Inter-Bold',
+        fontSize: 22,
+        color: 'white',
+    },
+    trustText: {
+        fontFamily: 'Inter-Regular',
+        fontSize: 16,
+        color: 'white',
+        marginTop: "3%",
+    },
+    trustBar: {
+        backgroundColor: '#519CFF',
+        height: 8,
+        borderRadius: 4,
+        marginTop: "1%",
+    }
 });

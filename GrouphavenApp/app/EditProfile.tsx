@@ -240,33 +240,33 @@ export default function EditProfile() {
         updateTagline(tagline || "");
         updateBio(bio || "");
         updateCity(city || "");
+        setIsChanged(false);
 
-          // ✅ Stream: only sync avatar
         if (isAvatarChanged) {
             try {
-            const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-            if (sessionError || !sessionData.session) throw sessionError;
+                const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+                if (sessionError || !sessionData.session) throw sessionError;
 
-            const accessToken = sessionData.session.access_token;
-            const userId = sessionData.session.user.id;
+                const accessToken = sessionData.session.access_token;
+                const userId = sessionData.session.user.id;
 
-            await fetch(`${process.env.EXPO_PUBLIC_SUPABASE_URL}/functions/v1/create-stream-user`, {
-                method: 'POST',
-                headers: {
-                'Content-Type': 'application/json',
-                Authorization: `Bearer ${accessToken}`,
-                },
-                body: JSON.stringify({
-                id: userId,
-                image: avatarUri || null,
-                }),
-            });
+                await fetch(`${process.env.EXPO_PUBLIC_SUPABASE_URL}/functions/v1/create-stream-user`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Authorization: `Bearer ${accessToken}`,
+                    },
+                    body: JSON.stringify({
+                        id: userId,
+                        image: avatarUri || null,
+                    }),
+                });
             } catch (error) {
-            console.error("Stream avatar sync failed:", error);
+                console.error("Stream avatar sync failed:", error);
             }
         }
 
-        setIsChanged(false);
+
         setIsAvatarChanged(false);
 
         router.dismiss(2);
@@ -453,6 +453,7 @@ const styles = StyleSheet.create({
         flex: 1,
         flexDirection: 'column',
         backgroundColor: "white",
+        paddingTop: "5%",
     },
     detailContainer: {
         flexDirection: 'column',

@@ -130,7 +130,7 @@ export async function approveUser(request_id: String, user_id: String) {
     return true;
 }
 
-export async function rejectUser(request_id: String) {
+export async function rejectUser(request_id: String, reason: String) {
     if (!supabase) {
         return false;
     }
@@ -153,6 +153,7 @@ export async function rejectUser(request_id: String) {
             request_status: 'rejected',
             verification_date: today,
             admin_id: adminData.user.id,
+            desc: reason,
         })
         .eq('request_id', request_id);
 

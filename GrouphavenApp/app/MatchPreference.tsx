@@ -1,14 +1,15 @@
 import { StyleSheet, View, Dimensions, TouchableOpacity, ScrollView } from 'react-native';
 import { Provider as PaperProvider, Text, Button, IconButton, Switch, Searchbar, Chip } from 'react-native-paper';
 import React from 'react';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import MultiSlider from '@ptomasroos/react-native-multi-slider';
 import { allInterests } from '../utils/interests';
-import { joinQueue, leaveQueue } from '../utils/Account';
+import { getUserProfile, joinQueue } from '../utils/Account';
 
 const { width } = Dimensions.get('window');
 
 export default function MatchPreference() {
+    const [isVerified, setIsVerified] = React.useState<boolean>(false);
     const [genderSwitch, setGenderSwitch] = React.useState(false);
     const [hostSwitch, setHostSwitch] = React.useState(false);
 
@@ -41,6 +42,18 @@ export default function MatchPreference() {
         joinQueue(hostSwitch, genderSwitch, ageRange[0], ageRange[1], groupRange[0], groupRange[1], interestsDB);
     };
 
+    useFocusEffect(
+        React.useCallback(() => {
+            const fetchUser = async () => {
+                const userData = await getUserProfile();
+                if (userData) {
+                    setIsVerified(userData.is_verified);
+                }
+            };
+            fetchUser();
+        }, [])
+    );
+
     return (
         <PaperProvider>
             <View style={styles.container}>
@@ -62,9 +75,9 @@ export default function MatchPreference() {
                     <View style={styles.slider}>
                         <View style={styles.row}>
                             <Text style={styles.label}>
-                                Opt to Host
+                                Opt to Host (Verified Users Only)
                             </Text>
-                            <Switch color='#519CFF' value={hostSwitch} onValueChange={onHostSwitch} />
+                            <Switch color='#519CFF' disabled={!isVerified} value={hostSwitch} onValueChange={onHostSwitch} />
                         </View>
                     </View>
 
@@ -206,6 +219,7 @@ const styles = StyleSheet.create({
         flex: 1,
         flexDirection: 'column',
         backgroundColor: "white",
+        paddingTop: "5%",
     },
     body: {
         flex: 1,
