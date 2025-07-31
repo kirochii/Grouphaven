@@ -46,6 +46,7 @@ export default function RootLayout() {
       <Stack.Screen name="VerifyAccount" options={{ headerShown: false }} />
       <Stack.Screen name="MatchPreference" options={{ headerShown: false }} />
       <Stack.Screen name="FAQ" options={{ headerShown: false }} />
+      <Stack.Screen name="Reviews" options={{ headerShown: false }} />
     </Stack>
   );
 }

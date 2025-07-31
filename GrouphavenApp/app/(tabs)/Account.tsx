@@ -95,7 +95,17 @@ export default function Account() {
                                     size={20}
                                 />
                             </View>
-                            <View style={styles.userContainer}>
+                            <TouchableOpacity onPress={() => router.push(`../../Reviews`)}>
+                                <View style={styles.userContainer}>
+                                    <Text style={styles.userLocation}>{user?.avg_rating}</Text>
+                                    <Icon
+                                        source="star"
+                                        color="orange"
+                                        size={20}
+                                    />
+                                </View>
+                            </TouchableOpacity>
+                            <View style={[styles.userContainer, { marginLeft: -5 }]}>
                                 <Icon
                                     source="map-marker"
                                     color={"#949494"}
