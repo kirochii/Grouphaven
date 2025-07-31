@@ -228,7 +228,7 @@ export default function ratingReport(){
                 </XStack>
             </YStack>
 
-            <XStack space="$4" width="100%" paddingHorizontal="$4" marginLeft={50} >
+            <XStack space="$4" width="97%" paddingHorizontal="$4" marginLeft={50} >
             {/* LEFT: Pie Charts (stacked) */}
                 <YStack space="$4">
                     {/* Rating Overview */}
@@ -497,7 +497,7 @@ export default function ratingReport(){
                 <>
                 {/* Table Header */}
                 <XStack paddingVertical="$3" paddingLeft={50} ai="center">
-                    <YStack flex={1}>
+                    <YStack flex={2}>
                     <Text fontWeight="bold">Review ID</Text>
                     </YStack>
                     <YStack flex={1}>
@@ -521,7 +521,7 @@ export default function ratingReport(){
                         paddingLeft={50}
                         alignItems="center"
                     >
-                        <YStack flex={1}>
+                        <YStack flex={2}>
                         <Text fontSize={14}>{item.review_id}</Text>
                         </YStack>
                         <YStack flex={1}>
@@ -539,7 +539,7 @@ export default function ratingReport(){
                 ))}
                 </>
             )}
-</YStack>
+            </YStack>
 
         </YStack>
     </>

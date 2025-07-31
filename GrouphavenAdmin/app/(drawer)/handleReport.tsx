@@ -11,6 +11,7 @@ export default function HandleReport() {
   const [modalVisible, setModalVisible] = React.useState(false);
   const [activeImageIndex, setActiveImageIndex] = React.useState(0);
 
+
   React.useEffect(() => {
     const checkAuth = async () => {
       const loggedIn = await checkSession();
