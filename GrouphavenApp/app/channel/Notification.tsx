@@ -9,7 +9,7 @@ interface TaskVerificationItem {
   host_id: string;
   reviewer_id: string;
   task_desc: string;
-  task_verified: boolean;
+  task_verified: boolean | null;
   host: {
     name: string;
     avatar_url: string;
@@ -42,7 +42,7 @@ export default function Notifications() {
           )
         `)
         .eq('reviewer_id', client.userID!)
-        .eq('task_verified', false)
+        .is('task_verified', null)
         .order('tv_id', { ascending: false });
 
       if (error) {
@@ -76,6 +76,8 @@ export default function Notifications() {
   };
 
   const handleVerify = async (task: TaskVerificationItem) => {
+    console.log('[handleVerify] Attempting to update tv_id:', task.tv_id);
+
     const { error: updateError } = await supabase
       .from('task_verification')
       .update({ task_verified: true })
@@ -119,7 +121,10 @@ export default function Notifications() {
   };
 
   const handleReject = async (task: TaskVerificationItem) => {
-    const { error } = await supabase.from('task_verification').delete().eq('tv_id', task.tv_id);
+    const { error } = await supabase
+      .from('task_verification')
+      .update({ task_verified: false })
+      .eq('tv_id', task.tv_id);
 
     if (!error) {
       setTasks((prev) => prev.filter((t) => t.tv_id !== task.tv_id));
