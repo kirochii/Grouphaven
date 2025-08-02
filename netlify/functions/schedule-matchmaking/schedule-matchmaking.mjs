@@ -343,7 +343,8 @@ async function insertDB(userGroups) {
     const userGroupEntries = group.users.map(user => ({
       id: user.id,
       group_id: groupId,
-      is_host: user.isHost
+      is_host: user.isHost,
+      current_task: user.isHost ? "Say hi to everyone!" : null
     }));
 
     // Step 3: Insert into user_group table

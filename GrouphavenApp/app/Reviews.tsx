@@ -53,7 +53,7 @@ export default function Reviews() {
 
                 <ScrollView style={styles.scrollContainer}>
                     <Text style={styles.infoText}>Overall Rating</Text>
-                    <Text style={styles.ratingHeader}>{user?.avg_rating}</Text>
+                    <Text style={styles.ratingHeader}>{user?.avg_rating != null ? user.avg_rating.toFixed(2) : ''}</Text>
 
                     <View style={styles.stars}>
                         {[1, 2, 3, 4, 5].map((i) => {

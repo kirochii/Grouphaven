@@ -74,7 +74,7 @@ export default function ChatProvider({ children }: PropsWithChildren) {
 
   return (
     <OverlayProvider>
-      <Chat client={client}>{children} </Chat>
+      <Chat client={client}>{children}</Chat>
     </OverlayProvider>
   );
 }

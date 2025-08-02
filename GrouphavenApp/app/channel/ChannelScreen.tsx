@@ -169,9 +169,6 @@ export default function ChannelScreen() {
     );
   }
 
-  const channelName = channel?.data?.name ?? 'Group Chat';
-  const avatarUrl = channel?.data?.image;
-
   const exitGroup = async () => {
     if (!cid || typeof cid !== 'string') return;
 
@@ -214,43 +211,53 @@ export default function ChannelScreen() {
     }
   };  
 
+
+  const channelName = channel?.data?.name ?? 'Group Chat';
+  const avatarUrl = channel?.data?.image;
+
+  const HeaderTitle = () => (
+    <Pressable
+      onPress={() => router.push({ pathname: '../channel/GroupInfo', params: { cid } })}
+      style={{ width: '120%' }}
+    >
+      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+        {avatarUrl ? (
+          <Image source={{ uri: avatarUrl }} style={styles.avatar} />
+        ) : (
+          <View style={[styles.avatar, { backgroundColor: '#ccc' }]} />
+        )}
+        <Text style={styles.channelName}>{channelName}</Text>
+      </View>
+    </Pressable>
+  );
+
+  const HeaderRight = () => (
+    <View style={styles.headerRight}>
+      <Pressable onPress={() => {}} style={{ padding: 8 }}>
+        <Ionicons name="call-outline" size={22} color="black" />
+      </Pressable>
+      <Pressable onPress={() => router.push('./Notification')} style={{ padding: 8 }}>
+        <Ionicons name="notifications-outline" size={22} color="black" />
+      </Pressable>
+      <Pressable onPress={openMenu} style={{ padding: 8 }}>
+        <MaterialIcons name="more-vert" size={24} color="black" />
+      </Pressable>
+    </View>
+  );
+
+  const HeaderLeft = () => (
+    <Pressable onPress={() => router.back()} style={{ paddingHorizontal: 12 }}>
+      <Ionicons name="arrow-back" size={24} color="black" />
+    </Pressable>
+  );
+
   return (
     <>
       <Stack.Screen
         options={{
-          headerTitle: () => (
-            <Pressable
-              onPress={() => router.push({ pathname: '../channel/GroupInfo', params: { cid } })}
-              style={{ width: '120%' }}
-            >
-              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                {avatarUrl ? (
-                  <Image source={{ uri: avatarUrl }} style={styles.avatar} />
-                ) : (
-                  <View style={[styles.avatar, { backgroundColor: '#ccc' }]} />
-                )}
-                <Text style={styles.channelName}>{channelName}</Text>
-              </View>
-            </Pressable>
-          ),
-          headerLeft: () => (
-            <Pressable onPress={() => router.back()} style={{ paddingHorizontal: 12 }}>
-              <Ionicons name="arrow-back" size={24} color="black" />
-            </Pressable>
-          ),
-          headerRight: () => (
-            <View style={styles.headerRight}>
-              <Pressable onPress={() => {}} style={{ padding: 8 }}>
-                <Ionicons name="call-outline" size={22} color="black" />
-              </Pressable>
-              <Pressable onPress={() => router.push('./Notification')} style={{ padding: 8 }}>
-                <Ionicons name="notifications-outline" size={22} color="black" />
-              </Pressable>
-              <Pressable onPress={openMenu} style={{ padding: 8 }}>
-                <MaterialIcons name="more-vert" size={24} color="black" />
-              </Pressable>
-            </View>
-          ),
+          headerTitle: HeaderTitle,
+          headerLeft: HeaderLeft,
+          headerRight: HeaderRight,
         }}
       />
 
