@@ -12,6 +12,7 @@ import {
 import { useLocalSearchParams, router } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { supabase } from '@/utils/supabase';
+import * as FileSystem from 'expo-file-system';
 
 const reasons = [
   'Spam',
@@ -55,15 +56,28 @@ export default function ReportUser() {
       for (let i = 0; i < imageUris.length; i++) {
         const uri = imageUris[i];
         const ext = uri.split('.').pop();
-        const path = `reports/${Date.now()}-${i}.${ext}`;
+        const path = `report/${Date.now()}-${i}.${ext}`;
 
-        const response = await fetch(uri);
-        const blob = await response.blob();
+        const fileInfo = await FileSystem.getInfoAsync(uri);
+        if (!fileInfo.exists) throw new Error('File not found: ' + uri);
 
-        const { error: uploadError } = await supabase.storage.from('report-images').upload(path, blob);
+        const base64 = await FileSystem.readAsStringAsync(uri, {
+          encoding: FileSystem.EncodingType.Base64,
+        });
+
+        const byteArray = Uint8Array.from(atob(base64), char => char.charCodeAt(0));
+        const blob = new Blob([byteArray], { type: `image/${ext}` });
+
+        const { error: uploadError } = await supabase.storage
+          .from('images')
+          .upload(path, blob);
+
         if (uploadError) throw uploadError;
 
-        const { data: publicUrlData } = supabase.storage.from('report-images').getPublicUrl(path);
+        const { data: publicUrlData } = supabase.storage
+          .from('images')
+          .getPublicUrl(path);
+
         uploadedUrls.push(publicUrlData.publicUrl);
       }
 

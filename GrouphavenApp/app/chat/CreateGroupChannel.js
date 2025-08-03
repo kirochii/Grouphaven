@@ -31,6 +31,10 @@ export async function createGroupChannel(groupId, groupName, users) {
   try {
     await channel.create();
     console.log('✅ Stream channel created:', channel.id);
+
+    await channel.removeMembers([systemBotId]);
+    console.log('🧹 System bot removed from channel:', channel.id);
+
   } catch (error) {
     if (error?.code === 16) {
       await channel.watch();
