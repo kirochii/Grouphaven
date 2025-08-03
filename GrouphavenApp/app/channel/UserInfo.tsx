@@ -22,13 +22,13 @@ export default function UserProfile() {
 
   const images = user
     ? [
-        { id: 1, uri: user.photo_1 },
-        { id: 2, uri: user.photo_2 },
-        { id: 3, uri: user.photo_3 },
-        { id: 4, uri: user.photo_4 },
-        { id: 5, uri: user.photo_5 },
-        { id: 6, uri: user.photo_6 },
-      ]
+      { id: 1, uri: user.photo_1 },
+      { id: 2, uri: user.photo_2 },
+      { id: 3, uri: user.photo_3 },
+      { id: 4, uri: user.photo_4 },
+      { id: 5, uri: user.photo_5 },
+      { id: 6, uri: user.photo_6 },
+    ]
     : [];
   const validImages = images.filter(image => image.uri);
 
@@ -117,10 +117,9 @@ export default function UserProfile() {
               </View>
             </View>
           </View>
-          <IconButton icon="close" onPress={() => router.back()} />
         </View>
 
-       
+
 
         {(user?.tagline || user?.bio) && (
           <View style={styles.userText}>
@@ -129,7 +128,7 @@ export default function UserProfile() {
           </View>
         )}
 
-         {user && <RatingStars rating={user.avg_rating} />}
+        {user && <RatingStars rating={user.avg_rating} />}
 
         <Text style={styles.title}>Photos</Text>
         <View style={styles.gridContainer}>
@@ -307,5 +306,5 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#888',
     marginTop: 4,
-},
+  },
 });

@@ -10,6 +10,7 @@ export default {
     scheme: 'myapp',
     userInterfaceStyle: 'automatic',
     extra: {
+      SUPABASE_FUNCTION_URL: 'https://lrryxyalvumuuvefxhrg.supabase.co',
       SUPABASE_URL: 'https://lrryxyalvumuuvefxhrg.supabase.com',
       SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxycnl4eWFsdnVtdXV2ZWZ4aHJnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzM1NDI1MTUsImV4cCI6MjA0OTExODUxNX0.OPUCbJI_3ufrSJ7dX7PH6XCpL5jj8cn9dv9AwvX4y_c',
       STREAM_API_KEY: 'h5j8g4mbjb5z',

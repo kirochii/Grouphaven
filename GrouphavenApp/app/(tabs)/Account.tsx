@@ -278,6 +278,7 @@ const styles = StyleSheet.create({
         height: height,
     },
     surface: {
+        marginTop: 10,
         backgroundColor: "#519CFF",
         borderRadius: 8,
         padding: "5%",
