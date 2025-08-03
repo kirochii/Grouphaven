@@ -193,7 +193,7 @@ export default function GroupInfoScreen() {
           </TouchableOpacity>
         </View>
 
-        {isHost ? (
+        {isHost === true? (
           <>
             {editingName ? (
               <>

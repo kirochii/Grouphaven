@@ -20,7 +20,7 @@ import { useEffect, useState } from 'react';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { supabase } from '@/utils/supabase';
 import { hostGoals } from '@/utils/hostGoals';
-import notifications from './Notification';
+
 
 
 
@@ -38,6 +38,9 @@ export default function ChannelScreen() {
 
   const [currentTask, setCurrentTask] = useState<string | null>(null);
   const [isHost, setIsHost] = useState(false);
+
+  const [showExitConfirm, setShowExitConfirm] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     const initChannel = async () => {
@@ -75,6 +78,20 @@ export default function ChannelScreen() {
     initChannel();
   }, [cid]);
 
+  const onRefresh = async () => {
+  setRefreshing(true);
+
+  try {
+      // Re-fetch the channel to get the latest messages and state
+      if (!cid || typeof cid !== 'string') return;  
+      // Or reload Supabase data
+    } catch (err) {
+      console.error('Refresh failed:', err);
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
   const handleCompleteTask = async () => {
     if (!cid || typeof cid !== 'string') return;
     const [_, groupId] = cid.split(':');
@@ -95,7 +112,6 @@ export default function ChannelScreen() {
         host_id: client.userID!,
         reviewer_id: m.id,
         task_desc: currentTask,
-        task_verified: false,
       }));
 
       const { error: insertError } = await supabase
@@ -325,19 +341,7 @@ export default function ChannelScreen() {
 
             <Pressable
               onPress={() => {
-                closeMenu();
-                router.push({ pathname: '../channel/RateUser', params: { cid } });
-              }}
-              style={styles.dropdownItem}
-            >
-              <View style={styles.iconRow}>
-                <Ionicons name="star-outline" size={24} color="#333" style={styles.icon} />
-                <Text style={styles.dropdownText}>Rate User</Text>
-              </View>
-            </Pressable>
-
-            <Pressable
-              onPress={() => {
+                setShowExitConfirm(true);
                 closeMenu();
               }}
               style={styles.dropdownItem}
@@ -348,6 +352,30 @@ export default function ChannelScreen() {
               </View>
             </Pressable>
           </Animated.View>
+        </View>
+      )}
+
+      {showExitConfirm && (
+        <View style={styles.overlayContainer}>
+          <Pressable onPress={() => setShowExitConfirm(false)} style={styles.dismissArea} />
+          <View style={styles.dropdown}>
+            <Text style={styles.dropdownText}>Are you sure you want to exit this group?</Text>
+            <Pressable
+              onPress={() => {
+                exitGroup();
+                setShowExitConfirm(false);
+              }}
+              style={[styles.dropdownItem, { backgroundColor: '#d00' }]}
+            >
+              <Text style={[styles.dropdownText, { color: '#fff' }]}>Yes, Exit</Text>
+            </Pressable>
+            <Pressable
+              onPress={() => setShowExitConfirm(false)}
+              style={styles.dropdownItem}
+            >
+              <Text style={styles.dropdownText}>Cancel</Text>
+            </Pressable>
+          </View>
         </View>
       )}
     </>
@@ -455,6 +483,58 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: '#555',
     marginTop: 2,
+  },
+    modalOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1000,
+  },
+  modalBox: {
+    backgroundColor: 'white',
+    borderRadius: 12,
+    padding: 20,
+    width: '80%',
+    elevation: 6,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    marginBottom: 10,
+  },
+  modalMessage: {
+    fontSize: 15,
+    color: '#444',
+    marginBottom: 20,
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+  },
+  modalCancel: {
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    marginRight: 10,
+  },
+  modalCancelText: {
+    fontSize: 15,
+    color: '#666',
+  },
+  modalConfirm: {
+    backgroundColor: '#d00',
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderRadius: 6,
+  },
+  modalConfirmText: {
+    color: 'white',
+    fontWeight: '500',
+    fontSize: 15,
   },
 
 });
