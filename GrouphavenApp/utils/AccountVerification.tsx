@@ -1,5 +1,6 @@
 import { supabase, supabaseAdmin } from './supabase';
 import * as SecureStore from 'expo-secure-store';
+import { StreamChat } from 'stream-chat';
 
 export async function signUpNewUser(inputEmail: string, inputPassword: string) {
     const { data, error } = await supabase.auth.signUp({
@@ -32,8 +33,22 @@ export async function signInWithEmail(inputEmail: string, inputPassword: string)
 }
 
 export async function signOut() {
-    const { error } = await supabase.auth.signOut();
-    await SecureStore.deleteItemAsync('userId');
+  // Sign out from Supabase
+  const { error } = await supabase.auth.signOut();
+  if (error) {
+    console.error('Supabase sign-out error:', error.message);
+  }
+
+  // Remove userId from SecureStore
+  await SecureStore.deleteItemAsync('userId');
+
+  // Disconnect from Stream Chat
+  try {
+    const client = StreamChat.getInstance(process.env.EXPO_PUBLIC_STREAM_API_KEY!);
+    await client.disconnectUser();
+  } catch (err) {
+    console.warn('Stream Chat disconnect failed:', err);
+  }
 }
 
 export async function resendConfirmationEmail(inputEmail: string) {

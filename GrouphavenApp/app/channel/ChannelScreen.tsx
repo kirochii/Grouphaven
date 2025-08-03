@@ -338,8 +338,8 @@ export default function ChannelScreen() {
 
             <Pressable
               onPress={() => {
-                setShowExitConfirm(true);
                 closeMenu();
+                exitGroup();
               }}
               style={styles.dropdownItem}
             >
@@ -352,29 +352,6 @@ export default function ChannelScreen() {
         </View>
       )}
 
-      {showExitConfirm && (
-        <View style={styles.overlayContainer}>
-          <Pressable onPress={() => setShowExitConfirm(false)} style={styles.dismissArea} />
-          <View style={styles.dropdown}>
-            <Text style={styles.dropdownText}>Are you sure you want to exit this group?</Text>
-            <Pressable
-              onPress={() => {
-                exitGroup();
-                setShowExitConfirm(false);
-              }}
-              style={[styles.dropdownItem, { backgroundColor: '#d00' }]}
-            >
-              <Text style={[styles.dropdownText, { color: '#fff' }]}>Yes, Exit</Text>
-            </Pressable>
-            <Pressable
-              onPress={() => setShowExitConfirm(false)}
-              style={styles.dropdownItem}
-            >
-              <Text style={styles.dropdownText}>Cancel</Text>
-            </Pressable>
-          </View>
-        </View>
-      )}
     </>
   );
 }
