@@ -1,16 +1,25 @@
 import { StyleSheet, View, } from 'react-native';
-import { Provider as PaperProvider, Text, Button, ActivityIndicator } from 'react-native-paper';
+import { Provider as PaperProvider, Text, Button, ActivityIndicator, Icon } from 'react-native-paper';
 import React from 'react';
 import { router } from 'expo-router';
-import { checkMatching, leaveQueue } from '../../utils/Account';
+import { checkMatching, leaveQueue, getUserProfile, calculateAge } from '../../utils/Account';
 import { supabase } from '../../utils/supabase';
 
 export default function Match() {
     const [loading, setLoading] = React.useState(true);
     const [isMatching, setIsMatching] = React.useState(false);
+    const [user, setUser] = React.useState<any>(null);
+    const [age, setAge] = React.useState<number | null>(null);
     const channelRef = React.useRef<any>(null);
 
     const fetchMatchingStatus = async () => {
+        const userData = await getUserProfile();
+        if (userData) {
+            setUser(userData);
+            const calculatedAge = calculateAge(userData.dob);
+            setAge(calculatedAge);
+        }
+
         const { result, channel } = await checkMatching(() => {
             fetchMatchingStatus();
         });
@@ -40,6 +49,16 @@ export default function Match() {
                 <View style={styles.container}>
                     {loading === true ? (
                         <ActivityIndicator animating={true} size="large" color='#519CFF' />
+                    ) : age == null || age <= 18 ? (
+                        <View style={styles.bannedContainer}>
+                            <Icon size={100} source={"alert-outline"} color='red'></Icon>
+                            <Text style={styles.bannedText}>Grouphaven is meant for users above the age of 18 only. You may delete your account, or contact an administrator if you believe this is a mistake.</Text >
+                        </View>
+                    ) : user?.status == 'banned' ? (
+                        <View style={styles.bannedContainer}>
+                            <Icon size={100} source={"alert-outline"} color='red'></Icon>
+                            <Text style={styles.bannedText}>Your account has been temporarily banned! Please wait until the ban is lifted, or contact an administrator if you believe this is a mistake.</Text >
+                        </View>
                     ) : isMatching === true ? (
                         <>
                             <ActivityIndicator animating={true} size={100} color='#519CFF' />
@@ -113,4 +132,15 @@ const styles = StyleSheet.create({
         fontSize: 16,
         color: "white",
     },
+    bannedText: {
+        fontFamily: 'Inter-Bold',
+        fontSize: 16,
+        color: "red",
+        textAlign: 'center',
+    },
+    bannedContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+    }
 });
