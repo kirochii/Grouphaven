@@ -215,7 +215,7 @@ export default function VerificationReport() {
         const rows = tableData.map(item => [
             item.id,
             item.status,
-            item.photo, // you might want to replace this with a URL or placeholder text
+            item.photo,
             item.requestBy,
             item.verifiedBy,
             item.requestDate,

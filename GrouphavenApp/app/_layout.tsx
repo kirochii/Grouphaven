@@ -2,6 +2,10 @@ import { Stack } from "expo-router";
 import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { Provider as PaperProvider } from 'react-native-paper';
+
+import 'react-native-url-polyfill/auto';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -28,25 +32,32 @@ export default function RootLayout() {
   }
 
   return (
-    <Stack screenOptions={{
-      animation: 'fade',
-      presentation: 'transparentModal',
-    }}>
-      <Stack.Screen name="index" options={{ headerShown: false }} />
-      <Stack.Screen name="SignUp" options={{ headerShown: false }} />
-      <Stack.Screen name="VerifyEmail" options={{ headerShown: false }} />
-      <Stack.Screen name="SignIn" options={{ headerShown: false }} />
-      <Stack.Screen name="ForgotPassword" options={{ headerShown: false }} />
-      <Stack.Screen name="CompleteProfile" options={{ headerShown: false }} />
-      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-      <Stack.Screen name="Settings" options={{ headerShown: false }} />
-      <Stack.Screen name="ChangePassword" options={{ headerShown: false }} />
-      <Stack.Screen name="ChangeEmail" options={{ headerShown: false }} />
-      <Stack.Screen name="EditProfile" options={{ headerShown: false }} />
-      <Stack.Screen name="VerifyAccount" options={{ headerShown: false }} />
-      <Stack.Screen name="MatchPreference" options={{ headerShown: false }} />
-      <Stack.Screen name="FAQ" options={{ headerShown: false }} />
-      <Stack.Screen name="Reviews" options={{ headerShown: false }} />
-    </Stack>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <PaperProvider>
+        <Stack
+          screenOptions={{
+            animation: 'fade',
+            presentation: 'transparentModal',
+          }}
+        >
+          <Stack.Screen name="index" options={{ headerShown: false }} />
+          <Stack.Screen name="SignUp" options={{ headerShown: false }} />
+          <Stack.Screen name="VerifyEmail" options={{ headerShown: false }} />
+          <Stack.Screen name="SignIn" options={{ headerShown: false }} />
+          <Stack.Screen name="ForgotPassword" options={{ headerShown: false }} />
+          <Stack.Screen name="CompleteProfile" options={{ headerShown: false }} />
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen name="Settings" options={{ headerShown: false }} />
+          <Stack.Screen name="ChangePassword" options={{ headerShown: false }} />
+          <Stack.Screen name="ChangeEmail" options={{ headerShown: false }} />
+          <Stack.Screen name="EditProfile" options={{ headerShown: false }} />
+          <Stack.Screen name="VerifyAccount" options={{ headerShown: false }} />
+          <Stack.Screen name="MatchPreference" options={{ headerShown: false }} />
+          <Stack.Screen name="FAQ" options={{ headerShown: false }} />
+          <Stack.Screen name="Reviews" options={{ headerShown: false }} />
+          <Stack.Screen name="channel" options={{ headerShown: false }} />
+        </Stack>
+      </PaperProvider>
+    </GestureHandlerRootView>
   );
 }

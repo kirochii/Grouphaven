@@ -5,6 +5,7 @@ import { router } from 'expo-router';
 import { Dropdown } from 'react-native-element-dropdown';
 import * as ImagePicker from 'expo-image-picker';
 import { getUserProfile, updateAvatar, uploadAvatar, updateTagline, updateBio, updateCity, uploadImage, updateImage } from '../utils/Account';
+import { supabase } from '@/utils/supabase';
 
 const { width, height } = Dimensions.get("window");
 
@@ -240,6 +241,32 @@ export default function EditProfile() {
         updateBio(bio || "");
         updateCity(city || "");
         setIsChanged(false);
+
+        if (isAvatarChanged) {
+            try {
+                const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+                if (sessionError || !sessionData.session) throw sessionError;
+
+                const accessToken = sessionData.session.access_token;
+                const userId = sessionData.session.user.id;
+
+                await fetch(`${process.env.EXPO_PUBLIC_SUPABASE_URL}/functions/v1/create-stream-user`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Authorization: `Bearer ${accessToken}`,
+                    },
+                    body: JSON.stringify({
+                        id: userId,
+                        image: avatarUri || null,
+                    }),
+                });
+            } catch (error) {
+                console.error("Stream avatar sync failed:", error);
+            }
+        }
+
+
         setIsAvatarChanged(false);
 
         router.dismiss(2);
