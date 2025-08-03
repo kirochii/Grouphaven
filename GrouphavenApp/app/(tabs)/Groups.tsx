@@ -5,9 +5,11 @@ import { getUserProfile } from '@/utils/Account';
 import { router } from 'expo-router';
 import ChatProvider from '../provider/ChatProvider';
 
+
 export default function Groups() {
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+
 
   useEffect(() => {
     const loadProfile = async () => {

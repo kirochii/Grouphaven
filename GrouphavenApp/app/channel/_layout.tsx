@@ -4,7 +4,7 @@ import ChatProvider from '../provider/ChatProvider';
 export default function ChannelLayout() {
   return (
     <ChatProvider>
-      <Stack screenOptions={{ headerShown: true, }} />
+      <Stack screenOptions={{ headerShown: true }}></Stack>
     </ChatProvider> 
   );
 }

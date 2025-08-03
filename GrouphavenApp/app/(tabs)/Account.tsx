@@ -97,7 +97,7 @@ export default function Account() {
                             </View>
                             <TouchableOpacity onPress={() => router.push(`../../Reviews`)}>
                                 <View style={styles.userContainer}>
-                                    <Text style={styles.userLocation}>{user?.avg_rating}</Text>
+                                    <Text style={styles.userLocation}>{user?.avg_rating != null ? user.avg_rating.toFixed(2) : ''}</Text>
                                     <Icon
                                         source="star"
                                         color="orange"
