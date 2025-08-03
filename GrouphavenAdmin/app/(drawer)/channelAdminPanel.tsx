@@ -13,6 +13,7 @@ import {
 } from 'tamagui';
 import { Ionicons } from '@expo/vector-icons';
 import { getGroupRows, getUserGroupMembers } from '../../utils/Functions';
+import { checkSession } from '~/utils/Account';
 
 type GroupRow = {
   groupId: string;
@@ -31,6 +32,19 @@ export default function ChannelAdminPanel() {
   const [showDialog, setShowDialog] = useState(false);
   const [members, setMembers] = useState<{ id: string; name: string; image?: string }[] | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+
+  React.useEffect(() => {
+    const init = async () => {
+      const loggedIn = await checkSession();
+
+      if (!loggedIn) {
+        window.location.replace('/');
+      }
+
+    };
+
+    init();
+  }, []);
 
   const fetchData = async () => {
     setLoading(true);
@@ -127,11 +141,11 @@ export default function ChannelAdminPanel() {
         throw new Error(`Suspend failed: ${res.status} ${text}`);
       }
 
-      if (!supabase){
-        return[];
+      if (!supabase) {
+        return [];
       }
-      
-          
+
+
       const { error: updateError } = await supabase
         .from('users')
         .update({ status: 'banned' })
@@ -290,14 +304,14 @@ export default function ChannelAdminPanel() {
                               alert('Failed to remove user. See console for details.');
                             }
                           }}>Remove</Button>
-                        <Button size="$1" onPress={async () => {
-                          const success = await suspendUser(selectedGroup.channelId, m.id);
-                          if (success) {
-                            fetchMembers(selectedGroup.groupId);
-                          }
-                        }}>
-                          Suspend
-                        </Button>
+                          <Button size="$1" onPress={async () => {
+                            const success = await suspendUser(selectedGroup.channelId, m.id);
+                            if (success) {
+                              fetchMembers(selectedGroup.groupId);
+                            }
+                          }}>
+                            Suspend
+                          </Button>
                         </XStack>
                       </XStack>
                     ))

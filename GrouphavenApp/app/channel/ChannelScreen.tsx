@@ -79,11 +79,11 @@ export default function ChannelScreen() {
   }, [cid]);
 
   const onRefresh = async () => {
-  setRefreshing(true);
+    setRefreshing(true);
 
-  try {
+    try {
       // Re-fetch the channel to get the latest messages and state
-      if (!cid || typeof cid !== 'string') return;  
+      if (!cid || typeof cid !== 'string') return;
       // Or reload Supabase data
     } catch (err) {
       console.error('Refresh failed:', err);
@@ -225,7 +225,7 @@ export default function ChannelScreen() {
       console.error('[ExitGroup] Error:', err);
       Alert.alert('Error', 'Failed to leave the group.');
     }
-  };  
+  };
 
 
   const channelName = channel?.data?.name ?? 'Group Chat';
@@ -249,9 +249,6 @@ export default function ChannelScreen() {
 
   const HeaderRight = () => (
     <View style={styles.headerRight}>
-      <Pressable onPress={() => {}} style={{ padding: 8 }}>
-        <Ionicons name="call-outline" size={22} color="black" />
-      </Pressable>
       <Pressable onPress={() => router.push('./Notification')} style={{ padding: 8 }}>
         <Ionicons name="notifications-outline" size={22} color="black" />
       </Pressable>
@@ -277,28 +274,28 @@ export default function ChannelScreen() {
         }}
       />
 
-    <View style={{ flex: 1 }}>
-      <Channel channel={channel}>
-        <View style={{ flex: 1 }}>
-          <MessageList />
-          <MessageInput />
-        </View>
-
-        {isHost && currentTask && (
-          <View style={styles.taskOverlay}>
-            <View style={styles.taskRow}>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.taskLabel}>Current Task:</Text>
-                <Text style={styles.taskText}>{currentTask}</Text>
-              </View>
-              <Pressable onPress={handleCompleteTask} style={styles.completeButton}>
-                <Ionicons name="checkmark-done" size={22} color="white" />
-              </Pressable>
-            </View>
+      <View style={{ flex: 1 }}>
+        <Channel channel={channel}>
+          <View style={{ flex: 1 }}>
+            <MessageList />
+            <MessageInput />
           </View>
-        )}
-      </Channel>
-    </View>
+
+          {isHost && currentTask && (
+            <View style={styles.taskOverlay}>
+              <View style={styles.taskRow}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.taskLabel}>Current Task:</Text>
+                  <Text style={styles.taskText}>{currentTask}</Text>
+                </View>
+                <Pressable onPress={handleCompleteTask} style={styles.completeButton}>
+                  <Ionicons name="checkmark-done" size={22} color="white" />
+                </Pressable>
+              </View>
+            </View>
+          )}
+        </Channel>
+      </View>
 
       {/* Dropdown Overlay */}
       {menuVisible && (
@@ -320,10 +317,10 @@ export default function ChannelScreen() {
               }}
               style={styles.dropdownItem}
             >
-            <View style={styles.iconRow}>
-              <Ionicons name="information-circle-outline" size={24} color="#333" style={styles.icon} />
-              <Text style={styles.dropdownText}>Group Info</Text>
-            </View>
+              <View style={styles.iconRow}>
+                <Ionicons name="information-circle-outline" size={24} color="#333" style={styles.icon} />
+                <Text style={styles.dropdownText}>Group Info</Text>
+              </View>
             </Pressable>
 
             <Pressable
@@ -484,7 +481,7 @@ const styles = StyleSheet.create({
     color: '#555',
     marginTop: 2,
   },
-    modalOverlay: {
+  modalOverlay: {
     position: 'absolute',
     top: 0,
     left: 0,
