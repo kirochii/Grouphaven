@@ -1,5 +1,6 @@
 fastapi
 uvicorn[standard]
-face_recognition
-python-multipart
-Pillow
+requests
+mediapipe
+opencv-python
+numpy
