@@ -5,5 +5,4 @@ services:
     buildCommand: ""
     startCommand: ./start.sh
     plan: free
-    runtime: python
     pythonVersion: 3.10
