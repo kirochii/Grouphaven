@@ -1,0 +1,7 @@
+services:
+  - type: web
+    name: face-detector
+    env: python
+    buildCommand: ""
+    startCommand: ./start.sh
+    plan: free
