@@ -1,11 +1,9 @@
 from fastapi import FastAPI, Query, HTTPException
 import requests
 import cv2
-import mediapipe as mp
 import numpy as np
 
 app = FastAPI()
-mp_face = mp.solutions.face_detection
 
 @app.get("/detect-faces")
 async def detect_faces(image_url: str = Query(...)):
@@ -18,9 +16,10 @@ async def detect_faces(image_url: str = Query(...)):
         raise HTTPException(status_code=400, detail=f"Error fetching or decoding image: {e}")
 
     try:
-        with mp_face.FaceDetection(model_selection=0, min_detection_confidence=0.5) as face_detection:
-            results = face_detection.process(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
-            face_detected = results.detections is not None and len(results.detections) > 0
-            return {"face_detected": face_detected}
+        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + "haarcascade_frontalface_default.xml")
+        faces = face_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5)
+        face_detected = len(faces) > 0
+        return {"face_detected": face_detected}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error in face detection: {e}")

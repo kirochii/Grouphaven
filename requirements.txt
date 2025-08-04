@@ -1,6 +1,5 @@
 fastapi
 uvicorn[standard]
 requests
-mediapipe
 opencv-python
 numpy
