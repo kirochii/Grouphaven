@@ -265,14 +265,23 @@ export async function uploadVerificationImage(fileUri: string, base64FileData: s
         return false;
     }
 
-    const { error: insertError } = await supabase
+    const { data: insertData, error: insertError } = await supabase
         .from('verification_request')
         .insert({ id: data.user.id, request_date: new Date().toISOString().split('T')[0], photo_url: publicUrl })
+        .select('request_id')
+        .single();
 
     if (insertError) {
         console.error('Insert failed:', insertError.message);
         return false;
     }
+
+    const { } = supabase.functions.invoke('detect-face', {
+        body: {
+            request_id: insertData?.request_id,
+            photo_url: publicUrl
+        }
+    })
 
     return true;
 }
