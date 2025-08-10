@@ -6,6 +6,7 @@ import { supabase } from '~/utils/supabase';
 import React from 'react';
 import { checkSession } from '~/utils/Account';
 
+
 export default function ManageUsers() {
     const [tableData, setTableData] = useState<any[]>([]);
     const statusOptions = ['active', 'banned'];
@@ -150,6 +151,54 @@ export default function ManageUsers() {
 
         console.log('Filtered users:', data);
         setTableData(data ?? []);
+    };
+
+    const handleSuspend = async (userId: string) => {
+        if (!supabase) {
+            alert('Supabase client not initialized.');
+            return false;
+        }
+
+        const { error } = await supabase
+            .from('users')
+            .update({ status: 'banned' })
+            .eq('id', userId);
+
+        if (error) {
+            console.error('Failed to suspend user:', error);
+            alert('Suspend failed');
+            return false;
+        }
+
+        setTableData(prev =>
+            prev.map(u => u.id === userId ? { ...u, status: 'banned' } : u)
+        );
+
+        return true;
+    };
+
+    const handleUnban = async (userId: string) => {
+        if (!supabase) {
+            alert('Supabase client not initialized.');
+            return false;
+        }
+
+        const { error } = await supabase
+            .from('users')
+            .update({ status: 'active' })
+            .eq('id', userId);
+
+        if (error) {
+            console.error('Failed to unban user:', error);
+            alert('Unban failed');
+            return false;
+        }
+
+        setTableData(prev =>
+            prev.map(u => u.id === userId ? { ...u, status: 'active' } : u)
+        );
+
+        return true;
     };
 
     const getStatusStyles = (status: string) => {
@@ -467,9 +516,15 @@ export default function ManageUsers() {
                                     <YStack flex={1}><Text fontSize={14}>{user.avg_rating ?? '—'}</Text></YStack>
                                     <YStack flex={1}><Text fontSize={14}>{user.exp}</Text></YStack>
                                     <YStack flex={1}>
-                                        <Button size="$2" theme="red" onPress={() => setConfirmSuspendId(user.id)}>
-                                            Suspend
-                                        </Button>
+                                        {user.status === 'banned' ? (
+                                            <Button size="$2" backgroundColor="$green8" color="white" onPress={() => handleUnban(user.id)}>
+                                                Unban
+                                            </Button>
+                                        ) : (
+                                            <Button size="$2" theme="red" onPress={() => setConfirmSuspendId(user.id)}>
+                                                Suspend
+                                            </Button>
+                                        )}
                                     </YStack>
                                 </XStack>
                                 <Separator />

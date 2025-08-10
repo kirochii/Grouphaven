@@ -123,6 +123,12 @@ export default function ChannelAdminPanel() {
 
       const accessToken = session.access_token;
 
+      console.log('Sending suspend request with:', {
+        action: 'ban-user',
+        channelId,
+        userId
+      });
+
       const res = await fetch('https://lrryxyalvumuuvefxhrg.functions.supabase.co/manage-channel', {
         method: 'POST',
         headers: {
@@ -142,9 +148,9 @@ export default function ChannelAdminPanel() {
       }
 
       if (!supabase) {
-        return [];
+        alert('Supabase client not initialized.');
+        return false;
       }
-
 
       const { error: updateError } = await supabase
         .from('users')
@@ -252,16 +258,25 @@ export default function ChannelAdminPanel() {
                 <Separator my="$3" />
 
                 <Button size="$3" theme="red" onPress={async () => {
-                  await fetch('https://lrryxyalvumuuvefxhrg.functions.supabase.co/manage-channel', {
-                    method: 'POST',
-                    headers: {
-                      'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                      action: 'delete',
-                      channelId: selectedGroup.channelId,
-                    }),
-                  });
+                if (!supabase) {
+                  alert('Supabase client not initialized.');
+                  return;
+                }
+
+                const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+                if (sessionError || !session?.access_token) throw new Error('Session error');
+
+                await fetch('https://lrryxyalvumuuvefxhrg.functions.supabase.co/manage-channel', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${session.access_token}`,
+                  },
+                  body: JSON.stringify({
+                    action: 'delete',
+                    channelId: selectedGroup.channelId,
+                  }),
+                });
                   setShowDialog(false);
                   await fetchData();
                 }}>
@@ -283,10 +298,18 @@ export default function ChannelAdminPanel() {
                         <XStack gap={10}>
                           <Button size="$1" theme="red" onPress={async () => {
                             try {
+                              if (!supabase) {
+                                alert('Supabase client not initialized.');
+                                return;
+                              }
+                              const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+                              if (sessionError || !session?.access_token) throw new Error('Session error');
+
                               const res = await fetch('https://lrryxyalvumuuvefxhrg.functions.supabase.co/manage-channel', {
                                 method: 'POST',
                                 headers: {
                                   'Content-Type': 'application/json',
+                                  Authorization: `Bearer ${session.access_token}`,
                                 },
                                 body: JSON.stringify({
                                   action: 'remove-user',

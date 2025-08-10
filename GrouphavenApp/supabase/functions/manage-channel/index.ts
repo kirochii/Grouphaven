@@ -104,11 +104,11 @@ serve(async (req: Request): Promise<Response> => {
             }
 
             // Ban the user
-            await serverClient.banUser('Admin', {
-              banned_by_id: userId,
-              reason: 'Suspended by admin',
-              timeout: 60 * 60 * 24 * 7, // 7 days
-            });
+          await serverClient.banUser(userId, {
+            banned_by_id: 'Admin',
+            reason: 'Banned by Admin',
+            timeout: 86400,
+          });
 
             console.log('Ban successful');
 
@@ -191,8 +191,8 @@ serve(async (req: Request): Promise<Response> => {
   --header 'Content-Type: application/json' \
   --data '{
     "action": "ban-user",
-    "channelId": "029c91c4-6ac0-482e-b279-8d1c15e334e6",
-    "userId": "c0eb0b76-bdcb-4430-ae04-6888d47073e9"
+    "channelId": "54ee5d04-0ffc-4a3f-a59c-a04c9edf0079",
+    "userId": "e80aeddf-e335-4c97-8768-fc89721fcd02"
   }'
 
 
