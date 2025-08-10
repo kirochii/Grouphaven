@@ -95,6 +95,8 @@ class Group {
   }
 }
 
+const comp = 50;
+
 // Weights for each feature
 const weights = {
   age: 0.2,
@@ -187,7 +189,7 @@ function softClustering(treeGroups) {
         for (const group of userGroups) {
           const score = calcCompatibility(user, group);
 
-          if (score >= 80) {
+          if (score >= comp) {
             group.addUser(user);
             placed = true;
             break;
@@ -223,7 +225,7 @@ function softClustering(treeGroups) {
             const targetGroup = hostlessGroups[j];
             const score = calcCompatibility(host, targetGroup);
 
-            if (score >= 80) {
+            if (score >= comp) {
               // Move host to target group
               targetGroup.addUser(host);
               group.users = group.users.filter(u => u !== host); // Remove host
