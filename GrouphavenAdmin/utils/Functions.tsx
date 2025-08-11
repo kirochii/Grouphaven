@@ -553,7 +553,7 @@ export async function getUserGroupMembers(groupId: string): Promise<{ id: string
   }
 
   return data.map((entry: any) => ({
-    id: entry.user_id,
+    id: entry.id,
     name: entry.users?.name ?? '(no name)',
     image: entry.users?.avatar_url ?? '',
   }));
