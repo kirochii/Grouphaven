@@ -19,7 +19,10 @@ serve(async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { action, channelId, userId, newName } = await req.json();
+    const body = await req.json();
+    console.log('Incoming Request Body:', body);
+
+    const { action, channelId, userId, newName } = body;
 
     if (!action || !channelId) {
       return withCors(
@@ -32,7 +35,7 @@ serve(async (req: Request): Promise<Response> => {
 
     const serverClient = StreamChat.getInstance(STREAM_API_KEY, STREAM_SECRET);
     const channel = serverClient.channel('messaging', channelId);
-    await channel.query(); // Ensure the channel exists
+    await channel.query(); // Make sure channel exists
 
     switch (action) {
       case 'rename':
@@ -77,55 +80,52 @@ serve(async (req: Request): Promise<Response> => {
           })
         );
 
-        case 'ban-user': {
-          if (!userId) {
+      case 'ban-user':
+        if (!userId) {
+          return withCors(
+            new Response(JSON.stringify({ error: 'Missing userId' }), {
+              status: 400,
+              headers: { 'Content-Type': 'application/json' },
+            })
+          );
+        }
+
+        console.log('Ban Request — userId:', userId, 'channelId:', channelId);
+
+        try {
+          const result = await serverClient.queryUsers({ id: { $eq: userId } });
+          const foundUser = result.users?.[0];
+
+          if (!foundUser) {
             return withCors(
-              new Response(JSON.stringify({ error: 'Missing userId' }), {
-                status: 400,
+              new Response(JSON.stringify({ error: 'User does not exist on Stream' }), {
+                status: 404,
                 headers: { 'Content-Type': 'application/json' },
               })
             );
           }
 
-          console.log('Ban Request — userId:', userId, 'channelId:', channelId);
-
-          try {
-            // Check if user exists on Stream
-            const result = await serverClient.queryUsers({ id: { $eq: userId } });
-            const foundUser = result.users?.[0];
-
-            if (!foundUser) {
-              return withCors(
-                new Response(JSON.stringify({ error: 'User does not exist on Stream' }), {
-                  status: 404,
-                  headers: { 'Content-Type': 'application/json' },
-                })
-              );
-            }
-
-            // Ban the user
           await serverClient.banUser(userId, {
-            banned_by_id: 'Admin',
-            reason: 'Banned by Admin',
+            banned_by_id: 'admin',
+            reason: 'Banned by admin',
             timeout: 86400,
           });
 
-            console.log('Ban successful');
+          console.log('Ban successful');
 
-            return withCors(
-              new Response(JSON.stringify({ message: 'User banned successfully' }), {
-                headers: { 'Content-Type': 'application/json' },
-              })
-            );
-          } catch (err) {
-            console.error('Ban error:', err);
-            return withCors(
-              new Response(JSON.stringify({ error: 'Ban failed', detail: String(err) }), {
-                status: 500,
-                headers: { 'Content-Type': 'application/json' },
-              })
-            );
-          }
+          return withCors(
+            new Response(JSON.stringify({ message: 'User banned successfully' }), {
+              headers: { 'Content-Type': 'application/json' },
+            })
+          );
+        } catch (err) {
+          console.error('Ban error:', err);
+          return withCors(
+            new Response(JSON.stringify({ error: 'Ban failed', detail: String(err) }), {
+              status: 500,
+              headers: { 'Content-Type': 'application/json' },
+            })
+          );
         }
 
       default:
@@ -146,6 +146,7 @@ serve(async (req: Request): Promise<Response> => {
     );
   }
 });
+
 
 
 /* To invoke locally:

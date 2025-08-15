@@ -72,26 +72,29 @@ export default function ratingReport() {
     const exportReviewCSV = () => {
         if (tableData.length === 0) return;
 
-        // Define the CSV headers
-        const headers = ['Review ID', 'Reviewer ID', 'Reviewee ID', 'Rating', 'Review', 'Review Date'];
+        const headers = [
+            'Review ID',
+            'Reviewer ID',
+            'Reviewee ID',
+            'Rating',
+            'Review',
+            'Review Date'
+        ];
 
-        // Map the tableData into rows
-        const rows = tableData.map((item) => [
-            item.review_id,
-            item.reviewer_id,
-            item.reviewee_id,
-            item.rating,
-            `"${item.review.replace(/"/g, '""')}"`, // Escape quotes
-            item.review_date
+        const rows = tableData.map(item => [
+            `"${String(item.review_id ?? '').replace(/"/g, '""')}"`,
+            `"${String(item.reviewer_id ?? '').replace(/"/g, '""')}"`,
+            `"${String(item.reviewee_id ?? '').replace(/"/g, '""')}"`,
+            `"${String(item.rating ?? '').replace(/"/g, '""')}"`,
+            `"${String(item.review ?? '').replace(/"/g, '""')}"`,
+            `"${String(item.review_date ?? '').replace(/"/g, '""')}"`,
         ]);
 
-        // Combine headers and rows into CSV content
         const csvContent = [headers, ...rows]
-            .map((row) => row.join(','))
+            .map(e => e.join(','))
             .join('\n');
 
-        // Create a Blob and trigger download
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
@@ -99,7 +102,9 @@ export default function ratingReport() {
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
+        URL.revokeObjectURL(url);
     };
+
 
     const toggleReviewSelection = (reviewId: string) => {
         setSelectedReviews(prev => {
